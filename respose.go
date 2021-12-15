@@ -1,6 +1,7 @@
 package httptest
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -61,7 +62,7 @@ func (res Responses) Test(object *httpexpect.Object) Responses {
 			} else {
 				object.Value(rs.Key).Number().Equal(rs.Value.(int))
 			}
-		case "[]tests.Responses":
+		case "[]httptest.Responses":
 			object.Value(rs.Key).Array().Length().Equal(len(rs.Value.([]Responses)))
 			length := int(object.Value(rs.Key).Array().Length().Raw())
 			if length > 0 && len(rs.Value.([]Responses)) == length {
@@ -69,7 +70,7 @@ func (res Responses) Test(object *httpexpect.Object) Responses {
 					rs.Value.([]Responses)[i].Test(object.Value(rs.Key).Array().Element(i).Object())
 				}
 			}
-		case "map[int][]tests.Responses":
+		case "map[int][]httptest.Responses":
 			values := rs.Value.(map[int][]Responses)
 			object.Value(rs.Key).Object().Keys().Length().Equal(len(values))
 			for key, v := range values {
@@ -77,7 +78,7 @@ func (res Responses) Test(object *httpexpect.Object) Responses {
 					vres.Test(object.Value(rs.Key).Object().Value(strconv.FormatInt(int64(key), 10)).Object())
 				}
 			}
-		case "tests.Responses":
+		case "httptest.Responses":
 			rs.Value.(Responses).Test(object.Value(rs.Key).Object())
 		case "[]uint":
 			object.Value(rs.Key).Array().Length().Equal(len(rs.Value.([]uint)))
@@ -139,7 +140,7 @@ func (res Responses) Scan(object *httpexpect.Object) Responses {
 			res[k].Value = int32(object.Value(rk.Key).Number().Raw())
 		case "float64":
 			res[k].Value = object.Value(rk.Key).Number().Raw()
-		case "[]tests.Responses":
+		case "[]httptest.Responses":
 			object.Value(rk.Key).Array().Length().Equal(len(rk.Value.([]Responses)))
 			length := int(object.Value(rk.Key).Array().Length().Raw())
 			if length > 0 && len(rk.Value.([]Responses)) == length {
@@ -147,7 +148,7 @@ func (res Responses) Scan(object *httpexpect.Object) Responses {
 					rk.Value.([]Responses)[i].Scan(object.Value(rk.Key).Array().Element(i).Object())
 				}
 			}
-		case "tests.Responses":
+		case "httptest.Responses":
 			res[k].Value = rk.Value.(Responses).Scan(object.Value(rk.Key).Object())
 		case "[]string":
 			if strings.ToLower(rk.Type) == "null" {
@@ -186,6 +187,7 @@ func Exist(object *httpexpect.Object, key string) bool {
 }
 
 func (res Responses) GetString(key string) string {
+	fmt.Println(key)
 	var keys []string
 	if strings.Contains(key, ".") {
 		keys = strings.Split(key, ".")
@@ -195,14 +197,16 @@ func (res Responses) GetString(key string) string {
 		key = keys[0]
 	}
 	for _, rk := range res {
+		reflectTypeString := reflect.TypeOf(rk.Value).String()
+		fmt.Println(reflectTypeString)
 		if key == rk.Key {
 			if rk.Value == nil {
 				return ""
 			}
-			switch reflect.TypeOf(rk.Value).String() {
+			switch reflectTypeString {
 			case "string":
 				return rk.Value.(string)
-			case "tests.Responses":
+			case "httptest.Responses":
 				return rk.Value.(Responses).GetString(keys[1])
 			}
 		}
@@ -232,7 +236,7 @@ func (rks Responses) GetResponses(key string) []Responses {
 				return nil
 			}
 			switch reflect.TypeOf(rk.Value).String() {
-			case "[]tests.Responses":
+			case "[]httptest.Responses":
 				return rk.Value.([]Responses)
 			}
 		}
@@ -247,7 +251,7 @@ func (rks Responses) GetResponse(key string) Responses {
 				return nil
 			}
 			switch reflect.TypeOf(rk.Value).String() {
-			case "tests.Responses":
+			case "httptest.Responses":
 				return rk.Value.(Responses)
 			}
 		}
@@ -278,7 +282,7 @@ func (rks Responses) GetUint(key string) uint {
 				return rk.Value.(uint)
 			case "int":
 				return uint(rk.Value.(int))
-			case "tests.Responses":
+			case "httptest.Responses":
 				return rk.Value.(Responses).GetUint(keys[1])
 			}
 		}
@@ -309,7 +313,7 @@ func (rks Responses) GetInt(key string) int {
 				return int(rk.Value.(int32))
 			case "uint":
 				return int(rk.Value.(uint))
-			case "tests.Responses":
+			case "httptest.Responses":
 				return rk.Value.(Responses).GetInt(keys[1])
 			}
 		}
@@ -339,7 +343,7 @@ func (rks Responses) GetInt32(key string) int32 {
 				return int32(rk.Value.(int))
 			case "uint":
 				return int32(rk.Value.(uint))
-			case "tests.Responses":
+			case "httptest.Responses":
 				return rk.Value.(Responses).GetInt32(keys[1])
 			}
 		}
