@@ -1,4 +1,4 @@
-package tests
+package httptest
 
 var (
 	RequestParams = map[string]interface{}{"page": 1, "pageSize": 10}
