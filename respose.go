@@ -1,7 +1,6 @@
 package httptest
 
 import (
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -187,7 +186,6 @@ func Exist(object *httpexpect.Object, key string) bool {
 }
 
 func (res Responses) GetString(key string) string {
-	fmt.Println(key)
 	var keys []string
 	if strings.Contains(key, ".") {
 		keys = strings.Split(key, ".")
@@ -198,7 +196,6 @@ func (res Responses) GetString(key string) string {
 	}
 	for _, rk := range res {
 		reflectTypeString := reflect.TypeOf(rk.Value).String()
-		fmt.Println(reflectTypeString)
 		if key == rk.Key {
 			if rk.Value == nil {
 				return ""
