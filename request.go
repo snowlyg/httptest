@@ -1,11 +1,13 @@
 package httptest
 
+import "net/http"
+
 var (
 	RequestParams = map[string]interface{}{"page": 1, "pageSize": 10}
 	LoginParams   = map[string]interface{}{"username": "admin", "password": "123456"}
 	LoginResponse = Responses{
-		{Key: "code", Value: 2000},
-		{Key: "message", Value: "请求成功"},
+		{Key: "code", Value: http.StatusOK},
+		{Key: "message", Value: "操作成功"},
 		{Key: "data",
 			Value: Responses{
 				{Key: "accessToken", Value: "", Type: "notempty"},
@@ -13,8 +15,8 @@ var (
 		},
 	}
 	LogoutResponse = Responses{
-		{Key: "code", Value: 2000},
-		{Key: "message", Value: "请求成功"},
+		{Key: "code", Value: http.StatusOK},
+		{Key: "message", Value: "操作成功"},
 	}
 	ResponseDatas = Responses{
 		{Key: "pageSize", Value: 10},
