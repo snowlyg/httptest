@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/gavv/httpexpect/v2 v2.3.1
-	github.com/snowlyg/helper v0.0.0-20211210061610-8518caad80b5
+	github.com/snowlyg/helper v0.0.5-alpha
 )
 
 require (
@@ -27,7 +27,7 @@ require (
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0 // indirect
 	github.com/yudai/gojsondiff v1.0.0 // indirect
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
-	golang.org/x/net v0.0.0-20210908191846-a5e095526f91 // indirect
+	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 	moul.io/http2curl v1.0.1-0.20190925090545-5cd742060b0e // indirect
 )
