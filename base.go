@@ -120,6 +120,15 @@ func (c *Client) GET(url string, res Responses, datas ...interface{}) Responses 
 	return res.Test(obj)
 }
 
+// DOWNLOAD
+func (c *Client) DOWNLOAD(url string, res Responses, datas ...interface{}) string {
+	req := c.expect.GET(url)
+	if len(datas) > 0 {
+		req = req.WithQueryObject(datas[0])
+	}
+	return req.Expect().Status(http.StatusOK).ContentType("application/octet-stream").Body().NotEmpty().Raw()
+}
+
 // DELETE
 func (c *Client) DELETE(url string, res Responses, datas ...interface{}) Responses {
 	req := c.expect.DELETE(url)
