@@ -64,9 +64,13 @@ func (res Responses) Test(object *httpexpect.Object) Responses {
 		case "[]httptest.Responses":
 			object.Value(rs.Key).Array().Length().Equal(len(rs.Value.([]Responses)))
 			length := int(object.Value(rs.Key).Array().Length().Raw())
-			if length > 0 && len(rs.Value.([]Responses)) == length {
-				for i := 0; i < length; i++ {
-					rs.Value.([]Responses)[i].Test(object.Value(rs.Key).Array().Element(i).Object())
+			if length > 0 {
+				if len(rs.Value.([]Responses)) == length {
+					for i := 0; i < length; i++ {
+						rs.Value.([]Responses)[i].Test(object.Value(rs.Key).Array().Element(i).Object())
+					}
+				} else {
+					rs.Value.([]Responses)[0].Test(object.Value(rs.Key).Array().First().Object())
 				}
 			}
 		case "map[int][]httptest.Responses":
@@ -82,9 +86,13 @@ func (res Responses) Test(object *httpexpect.Object) Responses {
 		case "[]uint":
 			object.Value(rs.Key).Array().Length().Equal(len(rs.Value.([]uint)))
 			length := int(object.Value(rs.Key).Array().Length().Raw())
-			if length > 0 && len(rs.Value.([]uint)) == length {
-				for i := 0; i < length; i++ {
-					object.Value(rs.Key).Array().Element(i).Number().Equal(rs.Value.([]uint)[i])
+			if length > 0 {
+				if len(rs.Value.([]uint)) == length {
+					for i := 0; i < length; i++ {
+						object.Value(rs.Key).Array().Element(i).Number().Equal(rs.Value.([]uint)[i])
+					}
+				} else {
+					object.Value(rs.Key).Array().First().Number().Equal(rs.Value.([]uint)[0])
 				}
 			}
 		case "[]string":
@@ -95,9 +103,13 @@ func (res Responses) Test(object *httpexpect.Object) Responses {
 			} else {
 				object.Value(rs.Key).Array().Length().Equal(len(rs.Value.([]string)))
 				length := int(object.Value(rs.Key).Array().Length().Raw())
-				if length > 0 && len(rs.Value.([]string)) == length {
-					for i := 0; i < length; i++ {
-						object.Value(rs.Key).Array().Element(i).String().Equal(rs.Value.([]string)[i])
+				if length > 0 {
+					if len(rs.Value.([]string)) == length {
+						for i := 0; i < length; i++ {
+							object.Value(rs.Key).Array().Element(i).String().Equal(rs.Value.([]string)[i])
+						}
+					} else {
+						object.Value(rs.Key).Array().First().String().Equal(rs.Value.([]string)[0])
 					}
 				}
 			}
@@ -142,9 +154,13 @@ func (res Responses) Scan(object *httpexpect.Object) Responses {
 		case "[]httptest.Responses":
 			object.Value(rk.Key).Array().Length().Equal(len(rk.Value.([]Responses)))
 			length := int(object.Value(rk.Key).Array().Length().Raw())
-			if length > 0 && len(rk.Value.([]Responses)) == length {
-				for i := 0; i < length; i++ {
-					rk.Value.([]Responses)[i].Scan(object.Value(rk.Key).Array().Element(i).Object())
+			if length > 0 {
+				if len(rk.Value.([]Responses)) == length {
+					for i := 0; i < length; i++ {
+						rk.Value.([]Responses)[i].Scan(object.Value(rk.Key).Array().Element(i).Object())
+					}
+				} else {
+					rk.Value.([]Responses)[0].Scan(object.Value(rk.Key).Array().First().Object())
 				}
 			}
 		case "httptest.Responses":
