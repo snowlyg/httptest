@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sync"
 	"testing"
 
 	"github.com/gavv/httpexpect/v2"
@@ -12,7 +11,6 @@ import (
 )
 
 var (
-	once           sync.Once
 	httpTestClient *Client
 )
 
@@ -22,24 +20,22 @@ type Client struct {
 }
 
 func Instance(t *testing.T, url string, handler http.Handler) *Client {
-	once.Do(func() {
-		httpTestClient = &Client{
-			t: t,
-			expect: httpexpect.WithConfig(httpexpect.Config{
-				BaseURL: url,
-				Client: &http.Client{
-					Transport: httpexpect.NewBinder(handler),
-					Jar:       httpexpect.NewJar(),
-				},
-				Reporter: httpexpect.NewAssertReporter(t),
-				Printers: []httpexpect.Printer{
-					httpexpect.NewDebugPrinter(t, true),
-					httpexpect.NewCurlPrinter(t),
-					httpexpect.NewCompactPrinter(t),
-				},
-			}),
-		}
-	})
+	httpTestClient = &Client{
+		t: t,
+		expect: httpexpect.WithConfig(httpexpect.Config{
+			BaseURL: url,
+			Client: &http.Client{
+				Transport: httpexpect.NewBinder(handler),
+				Jar:       httpexpect.NewJar(),
+			},
+			Reporter: httpexpect.NewAssertReporter(t),
+			Printers: []httpexpect.Printer{
+				httpexpect.NewDebugPrinter(t, true),
+				httpexpect.NewCurlPrinter(t),
+				httpexpect.NewCompactPrinter(t),
+			},
+		}),
+	}
 	return httpTestClient
 }
 
