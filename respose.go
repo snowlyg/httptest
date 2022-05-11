@@ -1,6 +1,7 @@
 package httptest
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -15,7 +16,7 @@ type Response struct {
 	Value interface{}
 }
 
-// Keys
+// Keys return Responses object key array
 func (res Responses) Keys() []string {
 	keys := []string{}
 	for _, re := range res {
@@ -24,12 +25,68 @@ func (res Responses) Keys() []string {
 	return keys
 }
 
+// IdKeys return Responses with id
 func IdKeys() Responses {
 	return Responses{
 		{Key: "id", Value: uint(0)},
 	}
 }
 
+func Test(object *httpexpect.Object, ress ...Responses) {
+	if len(ress) == 0 {
+		return
+	}
+
+	//return once
+	if len(ress) == 1 {
+		ress[0].Test(object.Value("data").Object())
+		return
+	}
+
+	array := object.Value("data").Array()
+	length := int(array.Length().Raw())
+	if length < len(ress) {
+		fmt.Println("Return data not equal keys length")
+		return
+	}
+
+	// return array
+	for m, ks := range ress {
+		if ks == nil {
+			return
+		}
+		ks.Test(object.Value("data").Array().Element(m).Object())
+	}
+}
+
+func Scan(object *httpexpect.Object, ress ...Responses) {
+	if len(ress) == 0 {
+		return
+	}
+
+	//return once
+	if len(ress) == 1 {
+		ress[0].Scan(object.Value("data").Object())
+		return
+	}
+
+	array := object.Value("data").Array()
+	length := int(array.Length().Raw())
+	if length < len(ress) {
+		fmt.Println("Return data not equal keys length")
+		return
+	}
+
+	// return array
+	for m, ks := range ress {
+		if ks == nil {
+			return
+		}
+		ks.Scan(object.Value("data").Array().Element(m).Object())
+	}
+}
+
+// Test Test Responses object
 func (res Responses) Test(object *httpexpect.Object) Responses {
 	for _, rs := range res {
 		reflectTypeString := reflect.TypeOf(rs.Value).String()
@@ -75,10 +132,13 @@ func (res Responses) Test(object *httpexpect.Object) Responses {
 			}
 		case "map[int][]httptest.Responses":
 			values := rs.Value.(map[int][]Responses)
-			object.Value(rs.Key).Object().Keys().Length().Equal(len(values))
-			for key, v := range values {
-				for _, vres := range v {
-					vres.Test(object.Value(rs.Key).Object().Value(strconv.FormatInt(int64(key), 10)).Object())
+			length := len(values)
+			if length > 0 {
+				object.Value(rs.Key).Object().Keys().Length().Equal(length)
+				for key, v := range values {
+					for _, vres := range v {
+						vres.Test(object.Value(rs.Key).Object().Value(strconv.FormatInt(int64(key), 10)).Object())
+					}
 				}
 			}
 		case "httptest.Responses":
@@ -132,6 +192,7 @@ func (res Responses) Test(object *httpexpect.Object) Responses {
 	return res.Scan(object)
 }
 
+// Scan Scan response data to Responses object.
 func (res Responses) Scan(object *httpexpect.Object) Responses {
 	for k, rk := range res {
 		if !Exist(object, rk.Key) {
@@ -191,6 +252,7 @@ func (res Responses) Scan(object *httpexpect.Object) Responses {
 	return res
 }
 
+// Exist Check object keys if the key is in the keys array.
 func Exist(object *httpexpect.Object, key string) bool {
 	objectKyes := object.Keys().Raw()
 	for _, objectKey := range objectKyes {
@@ -201,6 +263,7 @@ func Exist(object *httpexpect.Object, key string) bool {
 	return false
 }
 
+// GetString return string value.
 func (res Responses) GetString(key string) string {
 	var keys []string
 	if strings.Contains(key, ".") {
@@ -227,6 +290,7 @@ func (res Responses) GetString(key string) string {
 	return ""
 }
 
+// GetStrArray return string array value.
 func (rks Responses) GetStrArray(key string) []string {
 	for _, rk := range rks {
 		if key == rk.Key {
@@ -242,6 +306,7 @@ func (rks Responses) GetStrArray(key string) []string {
 	return nil
 }
 
+// GetResponses return Resposnes Array value
 func (rks Responses) GetResponses(key string) []Responses {
 	for _, rk := range rks {
 		if key == rk.Key {
@@ -257,6 +322,7 @@ func (rks Responses) GetResponses(key string) []Responses {
 	return nil
 }
 
+// GetResponsereturn Resposnes value
 func (rks Responses) GetResponse(key string) Responses {
 	for _, rk := range rks {
 		if key == rk.Key {
@@ -272,6 +338,7 @@ func (rks Responses) GetResponse(key string) Responses {
 	return nil
 }
 
+// GetUint return uint value
 func (rks Responses) GetUint(key string) uint {
 	var keys []string
 	if strings.Contains(key, ".") {
@@ -303,6 +370,7 @@ func (rks Responses) GetUint(key string) uint {
 	return 0
 }
 
+// GetInt return int value
 func (rks Responses) GetInt(key string) int {
 	var keys []string
 	if strings.Contains(key, ".") {
@@ -333,6 +401,8 @@ func (rks Responses) GetInt(key string) int {
 	}
 	return 0
 }
+
+// GetInt32 return int32.
 func (rks Responses) GetInt32(key string) int32 {
 	var keys []string
 	if strings.Contains(key, ".") {
@@ -364,6 +434,7 @@ func (rks Responses) GetInt32(key string) int32 {
 	return 0
 }
 
+// GetId return id.
 func (res Responses) GetId() uint {
 	return res.GetUint("data.id")
 }

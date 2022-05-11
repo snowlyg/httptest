@@ -1,9 +1,13 @@
 # httptest
 
-http 单元测试
+http uint test
 
-#### 下载
+#### download
 
 ```sh
   go get -u github.com/snowlyg/httptest@latest
 ```
+
+#### use case
+
+- [https://github.com/snowlyg/iris-admin](https://github.com/snowlyg/iris-admin)
