@@ -47,6 +47,7 @@ func Test(object *httpexpect.Object, ress ...Responses) {
 	length := int(array.Length().Raw())
 	if length < len(ress) {
 		fmt.Println("Return data not equal keys length")
+		array.Length().Equal(len(ress))
 		return
 	}
 
@@ -74,6 +75,7 @@ func Scan(object *httpexpect.Object, ress ...Responses) {
 	length := int(array.Length().Raw())
 	if length < len(ress) {
 		fmt.Println("Return data not equal keys length")
+		array.Length().Equal(len(ress))
 		return
 	}
 
