@@ -1,12 +1,16 @@
 package httptest
 
-import "net/http"
+import (
+	"net/http"
+)
 
 var (
 	// default page request params
-	RequestParams = map[string]interface{}{"page": 1, "pageSize": 10}
+	RequestFunc = NewWithQueryObjectParamFunc(map[string]interface{}{"page": 1, "pageSize": 10})
+
 	// default login request params
-	LoginParams = map[string]interface{}{"username": "admin", "password": "123456"}
+	LoginFunc = NewWithJsonParamFunc(map[string]interface{}{"username": "admin", "password": "123456"})
+
 	// default login response params
 	LoginResponse = Responses{
 		{Key: "status", Value: http.StatusOK},
@@ -23,7 +27,7 @@ var (
 		{Key: "message", Value: "操作成功"},
 	}
 	// default data response params
-	ResponseDatas = Responses{
+	ResponsePage = Responses{
 		{Key: "pageSize", Value: 10},
 		{Key: "page", Value: 1},
 	}

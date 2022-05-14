@@ -14,6 +14,34 @@ var (
 	httpTestClient *Client
 )
 
+type paramFunc func(req *httpexpect.Request) *httpexpect.Request
+
+//NewWithJsonParamFunc return req.WithJSON
+func NewWithJsonParamFunc(query map[string]interface{}) paramFunc {
+	return func(req *httpexpect.Request) *httpexpect.Request {
+		return req.WithJSON(query)
+	}
+}
+func NewWithQueryObjectParamFunc(query map[string]interface{}) paramFunc {
+	return func(req *httpexpect.Request) *httpexpect.Request {
+		return req.WithQueryObject(query)
+	}
+}
+
+//NewWithFileParamFunc return req.WithFile
+func NewWithFileParamFunc(fs []File) paramFunc {
+	return func(req *httpexpect.Request) *httpexpect.Request {
+		if len(fs) == 0 {
+			return req
+		}
+		req = req.WithMultipart()
+		for _, f := range fs {
+			req = req.WithFile(f.Key, f.Path, f.Reader)
+		}
+		return req
+	}
+}
+
 type Client struct {
 	t      *testing.T
 	expect *httpexpect.Expect
@@ -39,16 +67,14 @@ func Instance(t *testing.T, url string, handler http.Handler) *Client {
 	return httpTestClient
 }
 
-func (c *Client) Login(url string, res Responses, datas ...interface{}) error {
-	var data interface{}
-	data = LoginParams
-	if len(datas) > 0 {
-		data = datas[0]
+func (c *Client) Login(url string, res Responses, paramFuncs ...paramFunc) error {
+	if len(paramFuncs) == 0 {
+		paramFuncs = append(paramFuncs, LoginFunc)
 	}
 	if res == nil {
 		res = LoginResponse
 	}
-	token := c.POST(url, res, data).GetString("data.accessToken")
+	token := c.POST(url, res, paramFuncs...).GetString("data.accessToken")
 	fmt.Printf("access_token is '%s'\n", token)
 	if token == "" {
 		return fmt.Errorf("access_token is empty")
@@ -73,33 +99,35 @@ type File struct {
 }
 
 // POST
-func (c *Client) POST(url string, res Responses, data interface{}) Responses {
-	obj := c.expect.POST(url).WithJSON(data).Expect().Status(http.StatusOK).JSON().Object()
+func (c *Client) POST(url string, res Responses, paramFuncs ...paramFunc) Responses {
+	req := c.expect.POST(url)
+	if len(paramFuncs) > 0 {
+		for _, f := range paramFuncs {
+			req = f(req)
+		}
+	}
+	obj := req.Expect().Status(http.StatusOK).JSON().Object()
 	return res.Test(obj)
 }
 
 // PUT
-func (c *Client) PUT(url string, res Responses, data interface{}) Responses {
-	obj := c.expect.PUT(url).WithJSON(data).Expect().Status(http.StatusOK).JSON().Object()
+func (c *Client) PUT(url string, res Responses, paramFuncs ...paramFunc) Responses {
+	req := c.expect.PUT(url)
+	if len(paramFuncs) > 0 {
+		for _, f := range paramFuncs {
+			req = f(req)
+		}
+	}
+	obj := req.Expect().Status(http.StatusOK).JSON().Object()
 	return res.Test(obj)
 }
 
 // UPLOAD 上传文件
-func (c *Client) UPLOAD(url string, res Responses, files []File, fields ...map[string]interface{}) Responses {
+func (c *Client) UPLOAD(url string, res Responses, paramFuncs ...paramFunc) Responses {
 	req := c.expect.POST(url)
-	if len(files) > 0 {
-		for _, f := range files {
-			req = req.WithMultipart().WithFile(f.Key, f.Path, f.Reader)
-		}
-	}
-	if len(fields) > 0 {
-		for _, field := range fields {
-			if len(field) == 0 {
-				continue
-			}
-			for key, value := range field {
-				req = req.WithFormField(key, value)
-			}
+	if len(paramFuncs) > 0 {
+		for _, f := range paramFuncs {
+			req = f(req)
 		}
 	}
 	obj := req.Expect().Status(http.StatusOK).JSON().Object()
@@ -107,29 +135,35 @@ func (c *Client) UPLOAD(url string, res Responses, files []File, fields ...map[s
 }
 
 // GET
-func (c *Client) GET(url string, res Responses, datas ...interface{}) Responses {
+func (c *Client) GET(url string, res Responses, paramFuncs ...paramFunc) Responses {
 	req := c.expect.GET(url)
-	if len(datas) > 0 {
-		req = req.WithQueryObject(datas[0])
+	if len(paramFuncs) > 0 {
+		for _, f := range paramFuncs {
+			req = f(req)
+		}
 	}
 	obj := req.Expect().Status(http.StatusOK).JSON().Object()
 	return res.Test(obj)
 }
 
 // DOWNLOAD
-func (c *Client) DOWNLOAD(url string, res Responses, datas ...interface{}) string {
+func (c *Client) DOWNLOAD(url string, res Responses, paramFuncs ...paramFunc) string {
 	req := c.expect.GET(url)
-	if len(datas) > 0 {
-		req = req.WithQueryObject(datas[0])
+	if len(paramFuncs) > 0 {
+		for _, f := range paramFuncs {
+			req = f(req)
+		}
 	}
 	return req.Expect().Status(http.StatusOK).ContentType("application/octet-stream").Body().NotEmpty().Raw()
 }
 
 // DELETE
-func (c *Client) DELETE(url string, res Responses, datas ...interface{}) Responses {
+func (c *Client) DELETE(url string, res Responses, paramFuncs ...paramFunc) Responses {
 	req := c.expect.DELETE(url)
-	if len(datas) > 0 {
-		req = req.WithQueryObject(datas[0])
+	if len(paramFuncs) > 0 {
+		for _, f := range paramFuncs {
+			req = f(req)
+		}
 	}
 	obj := req.Expect().Status(http.StatusOK).JSON().Object()
 	return res.Test(obj)

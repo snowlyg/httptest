@@ -32,27 +32,27 @@ func IdKeys() Responses {
 	}
 }
 
-func Test(object *httpexpect.Object, ress ...Responses) {
-	if len(ress) == 0 {
+func Test(object *httpexpect.Object, reses ...Responses) {
+	if len(reses) == 0 {
 		return
 	}
 
 	//return once
-	if len(ress) == 1 {
-		ress[0].Test(object.Value("data").Object())
+	if len(reses) == 1 {
+		reses[0].Test(object.Value("data").Object())
 		return
 	}
 
 	array := object.Value("data").Array()
 	length := int(array.Length().Raw())
-	if length < len(ress) {
+	if length < len(reses) {
 		fmt.Println("Return data not equal keys length")
-		array.Length().Equal(len(ress))
+		array.Length().Equal(len(reses))
 		return
 	}
 
 	// return array
-	for m, ks := range ress {
+	for m, ks := range reses {
 		if ks == nil {
 			return
 		}
@@ -60,31 +60,31 @@ func Test(object *httpexpect.Object, ress ...Responses) {
 	}
 }
 
-func Scan(object *httpexpect.Object, ress ...Responses) {
-	if len(ress) == 0 {
+func Scan(object *httpexpect.Object, reses ...Responses) {
+	if len(reses) == 0 {
 		return
 	}
 
 	//return once
-	if len(ress) == 1 {
-		ress[0].Scan(object.Value("data").Object())
+	if len(reses) == 1 {
+		reses[0].Scan(object.Value("data").Object())
 		return
 	}
 
 	array := object.Value("data").Array()
 	length := int(array.Length().Raw())
-	if length < len(ress) {
+	if length < len(reses) {
 		fmt.Println("Return data not equal keys length")
-		array.Length().Equal(len(ress))
+		array.Length().Equal(len(reses))
 		return
 	}
 
 	// return array
-	for m, ks := range ress {
-		if ks == nil {
+	for m, res := range reses {
+		if res == nil {
 			return
 		}
-		ks.Scan(object.Value("data").Array().Element(m).Object())
+		res.Scan(object.Value("data").Array().Element(m).Object())
 	}
 }
 
