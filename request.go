@@ -6,7 +6,10 @@ import (
 
 var (
 	// default page request params
-	RequestFunc = NewWithQueryObjectParamFunc(map[string]interface{}{"page": 1, "pageSize": 10})
+	GetRequestFunc = NewWithQueryObjectParamFunc(map[string]interface{}{"page": 1, "pageSize": 10})
+
+	// default page request params
+	PostRequestFunc = NewWithJsonParamFunc(map[string]interface{}{"page": 1, "pageSize": 10})
 
 	// default login request params
 	LoginFunc = NewWithJsonParamFunc(map[string]interface{}{"username": "admin", "password": "123456"})
@@ -26,9 +29,19 @@ var (
 		{Key: "status", Value: http.StatusOK},
 		{Key: "message", Value: "操作成功"},
 	}
+
+	SuccessResponse = Responses{
+		{Key: "status", Value: http.StatusOK},
+		{Key: "message", Value: "操作成功"},
+	}
+
 	// default data response params
 	ResponsePage = Responses{
-		{Key: "pageSize", Value: 10},
-		{Key: "page", Value: 1},
+		{Key: "status", Value: http.StatusOK},
+		{Key: "message", Value: "操作成功"},
+		{Key: "data", Value: Responses{
+			{Key: "pageSize", Value: 10},
+			{Key: "page", Value: 1},
+		}},
 	}
 )

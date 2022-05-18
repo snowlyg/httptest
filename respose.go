@@ -11,9 +11,10 @@ import (
 
 type Responses []Response
 type Response struct {
-	Type  string
-	Key   string
-	Value interface{}
+	Type   string
+	Key    string
+	Value  interface{}
+	Length int
 }
 
 // Keys return Responses object key array
@@ -28,7 +29,7 @@ func (res Responses) Keys() []string {
 // IdKeys return Responses with id
 func IdKeys() Responses {
 	return Responses{
-		{Key: "id", Value: uint(0)},
+		{Key: "id", Value: 0, Type: "ge"},
 	}
 }
 
@@ -89,12 +90,12 @@ func Scan(object *httpexpect.Object, reses ...Responses) {
 }
 
 // Test Test Responses object
-func (res Responses) Test(object *httpexpect.Object) Responses {
+func (res Responses) Test(object *httpexpect.Object) {
 	for _, rs := range res {
-		reflectTypeString := reflect.TypeOf(rs.Value).String()
 		if rs.Value == nil {
 			continue
 		}
+		reflectTypeString := reflect.TypeOf(rs.Value).String()
 		switch reflectTypeString {
 		case "string":
 			if strings.ToLower(rs.Type) == "notempty" {
@@ -121,11 +122,18 @@ func (res Responses) Test(object *httpexpect.Object) Responses {
 				object.Value(rs.Key).Number().Equal(rs.Value.(int))
 			}
 		case "[]httptest.Responses":
-			object.Value(rs.Key).Array().Length().Equal(len(rs.Value.([]Responses)))
+			valueLen := len(rs.Value.([]Responses))
 			length := int(object.Value(rs.Key).Array().Length().Raw())
+			if rs.Length == 0 {
+				object.Value(rs.Key).Array().Length().Equal(valueLen)
+			}
 			if length > 0 {
-				if len(rs.Value.([]Responses)) == length {
-					for i := 0; i < length; i++ {
+				if valueLen == length {
+					max := length
+					if rs.Length > 0 {
+						max = rs.Length
+					}
+					for i := 0; i < max; i++ {
 						rs.Value.([]Responses)[i].Test(object.Value(rs.Key).Array().Element(i).Object())
 					}
 				} else {
@@ -146,11 +154,18 @@ func (res Responses) Test(object *httpexpect.Object) Responses {
 		case "httptest.Responses":
 			rs.Value.(Responses).Test(object.Value(rs.Key).Object())
 		case "[]uint":
-			object.Value(rs.Key).Array().Length().Equal(len(rs.Value.([]uint)))
+			valueLen := len(rs.Value.([]uint))
+			if rs.Length == 0 {
+				object.Value(rs.Key).Array().Length().Equal(valueLen)
+			}
 			length := int(object.Value(rs.Key).Array().Length().Raw())
 			if length > 0 {
-				if len(rs.Value.([]uint)) == length {
-					for i := 0; i < length; i++ {
+				if valueLen == length {
+					max := length
+					if rs.Length > 0 {
+						max = rs.Length
+					}
+					for i := 0; i < max; i++ {
 						object.Value(rs.Key).Array().Element(i).Number().Equal(rs.Value.([]uint)[i])
 					}
 				} else {
@@ -163,11 +178,18 @@ func (res Responses) Test(object *httpexpect.Object) Responses {
 			} else if strings.ToLower(rs.Type) == "notnull" {
 				object.Value(rs.Key).NotNull()
 			} else {
-				object.Value(rs.Key).Array().Length().Equal(len(rs.Value.([]string)))
+				valueLen := len(rs.Value.([]string))
+				if rs.Length == 0 {
+					object.Value(rs.Key).Array().Length().Equal(valueLen)
+				}
 				length := int(object.Value(rs.Key).Array().Length().Raw())
 				if length > 0 {
-					if len(rs.Value.([]string)) == length {
-						for i := 0; i < length; i++ {
+					if valueLen == length {
+						max := length
+						if rs.Length > 0 {
+							max = rs.Length
+						}
+						for i := 0; i < max; i++ {
 							object.Value(rs.Key).Array().Element(i).String().Equal(rs.Value.([]string)[i])
 						}
 					} else {
@@ -191,11 +213,11 @@ func (res Responses) Test(object *httpexpect.Object) Responses {
 			continue
 		}
 	}
-	return res.Scan(object)
+	res.Scan(object)
 }
 
 // Scan Scan response data to Responses object.
-func (res Responses) Scan(object *httpexpect.Object) Responses {
+func (res Responses) Scan(object *httpexpect.Object) {
 	for k, rk := range res {
 		if !Exist(object, rk.Key) {
 			continue
@@ -203,7 +225,8 @@ func (res Responses) Scan(object *httpexpect.Object) Responses {
 		if rk.Value == nil {
 			continue
 		}
-		switch reflect.TypeOf(rk.Value).String() {
+		valueTypeName := reflect.TypeOf(rk.Value).String()
+		switch valueTypeName {
 		case "string":
 			res[k].Value = object.Value(rk.Key).String().Raw()
 		case "uint":
@@ -215,19 +238,25 @@ func (res Responses) Scan(object *httpexpect.Object) Responses {
 		case "float64":
 			res[k].Value = object.Value(rk.Key).Number().Raw()
 		case "[]httptest.Responses":
-			object.Value(rk.Key).Array().Length().Equal(len(rk.Value.([]Responses)))
+			valueLen := len(res[k].Value.([]Responses))
+			if rk.Length > 0 {
+				valueLen = rk.Length
+			}
+			if rk.Length == 0 {
+				object.Value(rk.Key).Array().Length().Equal(valueLen)
+			}
 			length := int(object.Value(rk.Key).Array().Length().Raw())
 			if length > 0 {
-				if len(rk.Value.([]Responses)) == length {
-					for i := 0; i < length; i++ {
-						rk.Value.([]Responses)[i].Scan(object.Value(rk.Key).Array().Element(i).Object())
+				if valueLen == length {
+					for i := 0; i < valueLen; i++ {
+						res[k].Value.([]Responses)[i].Scan(object.Value(rk.Key).Array().Element(i).Object())
 					}
 				} else {
-					rk.Value.([]Responses)[0].Scan(object.Value(rk.Key).Array().First().Object())
+					res[k].Value.([]Responses)[0].Scan(object.Value(rk.Key).Array().First().Object())
 				}
 			}
 		case "httptest.Responses":
-			res[k].Value = rk.Value.(Responses).Scan(object.Value(rk.Key).Object())
+			rk.Value.(Responses).Scan(object.Value(rk.Key).Object())
 		case "[]string":
 			if strings.ToLower(rk.Type) == "null" {
 				res[k].Value = []string{}
@@ -251,7 +280,6 @@ func (res Responses) Scan(object *httpexpect.Object) Responses {
 			continue
 		}
 	}
-	return res
 }
 
 // Exist Check object keys if the key is in the keys array.
@@ -266,28 +294,38 @@ func Exist(object *httpexpect.Object, key string) bool {
 }
 
 // GetString return string value.
-func (res Responses) GetString(key string) string {
-	var keys []string
-	if strings.Contains(key, ".") {
-		keys = strings.Split(key, ".")
-		if len(keys) != 2 {
-			return ""
-		}
-		key = keys[0]
+func (res Responses) GetString(key ...string) string {
+	if len(key) == 0 {
+		return ""
 	}
-	for _, rk := range res {
-		reflectTypeString := reflect.TypeOf(rk.Value).String()
-		if key == rk.Key {
+
+	if len(key) == 1 {
+		k := key[0]
+		if strings.Contains(k, ".") {
+			keys := strings.Split(k, ".")
+			if len(keys) == 0 {
+				return ""
+			}
+			key = keys
+		}
+	}
+
+	for i := 0; i < len(key); i++ {
+		for m, rk := range res {
 			if rk.Value == nil {
 				return ""
 			}
-			switch reflectTypeString {
-			case "string":
-				return rk.Value.(string)
-			case "httptest.Responses":
-				return rk.Value.(Responses).GetString(keys[1])
+			reflectTypeString := reflect.TypeOf(rk.Value).String()
+			if key[i] == rk.Key {
+				switch reflectTypeString {
+				case "string":
+					return rk.Value.(string)
+				case "httptest.Responses":
+					return res[m].Value.(Responses).GetString(key[i+1:]...)
+				}
 			}
 		}
+
 	}
 	return ""
 }
@@ -341,102 +379,178 @@ func (rks Responses) GetResponse(key string) Responses {
 }
 
 // GetUint return uint value
-func (rks Responses) GetUint(key string) uint {
-	var keys []string
-	if strings.Contains(key, ".") {
-		keys = strings.Split(key, ".")
-		if len(keys) != 2 {
-			return 0
-		}
-		key = keys[0]
+func (rks Responses) GetUint(key ...string) uint {
+
+	if len(key) == 0 {
+		return 0
 	}
-	for _, rk := range rks {
-		if key == rk.Key {
-			if rk.Value == nil {
+
+	if len(key) == 1 {
+		k := key[0]
+		if strings.Contains(k, ".") {
+			keys := strings.Split(k, ".")
+			if len(keys) == 0 {
 				return 0
 			}
-			switch reflect.TypeOf(rk.Value).String() {
-			case "float64":
-				return uint(rk.Value.(float64))
-			case "int32":
-				return uint(rk.Value.(int32))
-			case "uint":
-				return rk.Value.(uint)
-			case "int":
-				return uint(rk.Value.(int))
-			case "httptest.Responses":
-				return rk.Value.(Responses).GetUint(keys[1])
+			key = keys
+		}
+	}
+
+	for i := 0; i < len(key); i++ {
+		for m, rk := range rks {
+			if key[i] == rk.Key {
+				if rk.Value == nil {
+					return 0
+				}
+				valueTypeName := reflect.TypeOf(rk.Value).String()
+				switch valueTypeName {
+				case "float64":
+					return uint(rk.Value.(float64))
+				case "int32":
+					return uint(rk.Value.(int32))
+				case "uint":
+					return rk.Value.(uint)
+				case "int":
+					return uint(rk.Value.(int))
+				case "httptest.Responses":
+					return rks[m].Value.(Responses).GetUint(key[i:]...)
+				}
 			}
 		}
 	}
+
 	return 0
 }
 
 // GetInt return int value
-func (rks Responses) GetInt(key string) int {
-	var keys []string
-	if strings.Contains(key, ".") {
-		keys = strings.Split(key, ".")
-		if len(keys) != 2 {
-			return 0
-		}
-		key = keys[0]
+func (rks Responses) GetInt(key ...string) int {
+	if len(key) == 0 {
+		return 0
 	}
-	for _, rk := range rks {
-		if key == rk.Key {
-			if rk.Value == nil {
+
+	if len(key) == 1 {
+		k := key[0]
+		if strings.Contains(k, ".") {
+			keys := strings.Split(k, ".")
+			if len(keys) == 0 {
 				return 0
 			}
-			switch reflect.TypeOf(rk.Value).String() {
-			case "float64":
-				return int(rk.Value.(float64))
-			case "int":
-				return rk.Value.(int)
-			case "int32":
-				return int(rk.Value.(int32))
-			case "uint":
-				return int(rk.Value.(uint))
-			case "httptest.Responses":
-				return rk.Value.(Responses).GetInt(keys[1])
+			key = keys
+		}
+	}
+
+	for i := 0; i < len(key); i++ {
+		for m, rk := range rks {
+			if key[i] == rk.Key {
+				if rk.Value == nil {
+					return 0
+				}
+				switch reflect.TypeOf(rk.Value).String() {
+				case "float64":
+					return int(rk.Value.(float64))
+				case "int":
+					return rk.Value.(int)
+				case "int32":
+					return int(rk.Value.(int32))
+				case "uint":
+					return int(rk.Value.(uint))
+				case "httptest.Responses":
+					return rks[m].Value.(Responses).GetInt(key[i+1:]...)
+				}
 			}
 		}
 	}
+
 	return 0
 }
 
 // GetInt32 return int32.
-func (rks Responses) GetInt32(key string) int32 {
-	var keys []string
-	if strings.Contains(key, ".") {
-		keys = strings.Split(key, ".")
-		if len(keys) != 2 {
-			return 0
-		}
-		key = keys[0]
+func (rks Responses) GetInt32(key ...string) int32 {
+	if len(key) == 0 {
+		return 0
 	}
-	for _, rk := range rks {
-		if key == rk.Key {
-			if rk.Value == nil {
+
+	if len(key) == 1 {
+		k := key[0]
+		if strings.Contains(k, ".") {
+			keys := strings.Split(k, ".")
+			if len(keys) == 0 {
 				return 0
 			}
-			switch reflect.TypeOf(rk.Value).String() {
-			case "float64":
-				return int32(rk.Value.(float64))
-			case "int32":
-				return rk.Value.(int32)
-			case "int":
-				return int32(rk.Value.(int))
-			case "uint":
-				return int32(rk.Value.(uint))
-			case "httptest.Responses":
-				return rk.Value.(Responses).GetInt32(keys[1])
+			key = keys
+		}
+	}
+
+	for i := 0; i < len(key); i++ {
+		for m, rk := range rks {
+			if key[i] == rk.Key {
+				if rk.Value == nil {
+					return 0
+				}
+				switch reflect.TypeOf(rk.Value).String() {
+				case "float64":
+					return int32(rk.Value.(float64))
+				case "int32":
+					return rk.Value.(int32)
+				case "int":
+					return int32(rk.Value.(int))
+				case "uint":
+					return int32(rk.Value.(uint))
+				case "httptest.Responses":
+					return rks[m].Value.(Responses).GetInt32(key[i+1:]...)
+				}
 			}
 		}
 	}
+
+	return 0
+}
+
+func (rks Responses) GetFloat64(key ...string) float64 {
+	if len(key) == 0 {
+		return 0
+	}
+
+	if len(key) == 1 {
+		k := key[0]
+		if strings.Contains(k, ".") {
+			keys := strings.Split(k, ".")
+			if len(keys) == 0 {
+				return 0
+			}
+			key = keys
+		}
+	}
+
+	for i := 0; i < len(key); i++ {
+		for m, rk := range rks {
+			if key[i] == rk.Key {
+				if rk.Value == nil {
+					return 0
+				}
+				switch reflect.TypeOf(rk.Value).String() {
+				case "float64":
+					return rk.Value.(float64)
+				case "int":
+					return float64(rk.Value.(int))
+				case "int32":
+					return float64(rk.Value.(int32))
+				case "uint":
+					return float64(rk.Value.(uint))
+				case "httptest.Responses":
+					return rks[m].Value.(Responses).GetFloat64(key[i+1:]...)
+				}
+			}
+		}
+	}
+
 	return 0
 }
 
 // GetId return id.
-func (res Responses) GetId() uint {
-	return res.GetUint("data.id")
+func (res Responses) GetId(key ...string) uint {
+	if len(key) == 0 {
+		key = append(key, "data", "id")
+	}
+	return res.GetUint(key...)
 }
