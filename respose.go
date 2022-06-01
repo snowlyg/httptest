@@ -9,12 +9,16 @@ import (
 	"github.com/gavv/httpexpect/v2"
 )
 
+type TestFunc interface {
+}
+
 type Responses []Response
 type Response struct {
-	Type   string
-	Key    string
-	Value  interface{}
-	Length int
+	Type   string                // httpest type , if empty use  Equal() function to test
+	Key    string                // httptest data's key
+	Value  interface{}           // httptest data's value
+	Length int                   // httptest data's length,when the data are array or map
+	Func   func(obj interface{}) // httpest func, you can add your test logic ,can be empty
 }
 
 // Keys return Responses object key array
@@ -98,87 +102,90 @@ func (res Responses) Test(object *httpexpect.Object) {
 		reflectTypeString := reflect.TypeOf(rs.Value).String()
 		switch reflectTypeString {
 		case "string":
-			if strings.ToLower(rs.Type) == "notempty" {
-				object.Value(rs.Key).String().NotEmpty()
+			if rs.Func != nil {
+				rs.Func(object.Value(rs.Key))
 			} else {
-				object.Value(rs.Key).String().Equal(rs.Value.(string))
+				if strings.ToLower(rs.Type) == "notempty" {
+					object.Value(rs.Key).String().NotEmpty()
+				} else {
+					object.Value(rs.Key).String().Equal(rs.Value.(string))
+				}
 			}
 		case "float64":
-			if strings.ToLower(rs.Type) == "ge" {
-				object.Value(rs.Key).Number().Ge(rs.Value.(float64))
+			if rs.Func != nil {
+				rs.Func(object.Value(rs.Key))
 			} else {
-				object.Value(rs.Key).Number().Equal(rs.Value.(float64))
+				if strings.ToLower(rs.Type) == "ge" {
+					object.Value(rs.Key).Number().Ge(rs.Value.(float64))
+				} else {
+					object.Value(rs.Key).Number().Equal(rs.Value.(float64))
+				}
 			}
 		case "uint":
-			if strings.ToLower(rs.Type) == "ge" {
-				object.Value(rs.Key).Number().Ge(rs.Value.(uint))
+			if rs.Func != nil {
+				rs.Func(object.Value(rs.Key))
 			} else {
-				object.Value(rs.Key).Number().Equal(rs.Value.(uint))
+				if strings.ToLower(rs.Type) == "ge" {
+					object.Value(rs.Key).Number().Ge(rs.Value.(uint))
+				} else {
+					object.Value(rs.Key).Number().Equal(rs.Value.(uint))
+				}
 			}
 		case "int":
-			if strings.ToLower(rs.Type) == "ge" {
-				object.Value(rs.Key).Number().Ge(rs.Value.(int))
+			if rs.Func != nil {
+				rs.Func(object.Value(rs.Key))
 			} else {
-				object.Value(rs.Key).Number().Equal(rs.Value.(int))
+				if strings.ToLower(rs.Type) == "ge" {
+					object.Value(rs.Key).Number().Ge(rs.Value.(int))
+				} else {
+					object.Value(rs.Key).Number().Equal(rs.Value.(int))
+				}
 			}
 		case "[]httptest.Responses":
-			valueLen := len(rs.Value.([]Responses))
-			length := int(object.Value(rs.Key).Array().Length().Raw())
-			if rs.Length == 0 {
-				object.Value(rs.Key).Array().Length().Equal(valueLen)
-			}
-			if length > 0 {
-				if valueLen == length {
-					max := length
-					if rs.Length > 0 {
-						max = rs.Length
+			if rs.Func != nil {
+				rs.Func(object.Value(rs.Key))
+			} else {
+				valueLen := len(rs.Value.([]Responses))
+				length := int(object.Value(rs.Key).Array().Length().Raw())
+				if rs.Length == 0 {
+					object.Value(rs.Key).Array().Length().Equal(valueLen)
+				}
+				if length > 0 {
+					if valueLen == length {
+						max := length
+						if rs.Length > 0 {
+							max = rs.Length
+						}
+						for i := 0; i < max; i++ {
+							rs.Value.([]Responses)[i].Test(object.Value(rs.Key).Array().Element(i).Object())
+						}
+					} else {
+						rs.Value.([]Responses)[0].Test(object.Value(rs.Key).Array().First().Object())
 					}
-					for i := 0; i < max; i++ {
-						rs.Value.([]Responses)[i].Test(object.Value(rs.Key).Array().Element(i).Object())
-					}
-				} else {
-					rs.Value.([]Responses)[0].Test(object.Value(rs.Key).Array().First().Object())
 				}
 			}
 		case "map[int][]httptest.Responses":
-			values := rs.Value.(map[int][]Responses)
-			length := len(values)
-			if length > 0 {
-				object.Value(rs.Key).Object().Keys().Length().Equal(length)
-				for key, v := range values {
-					for _, vres := range v {
-						vres.Test(object.Value(rs.Key).Object().Value(strconv.FormatInt(int64(key), 10)).Object())
+			if rs.Func != nil {
+				rs.Func(object.Value(rs.Key))
+			} else {
+				values := rs.Value.(map[int][]Responses)
+				length := len(values)
+				if length > 0 {
+					object.Value(rs.Key).Object().Keys().Length().Equal(length)
+					for key, v := range values {
+						for _, vres := range v {
+							vres.Test(object.Value(rs.Key).Object().Value(strconv.FormatInt(int64(key), 10)).Object())
+						}
 					}
 				}
 			}
 		case "httptest.Responses":
 			rs.Value.(Responses).Test(object.Value(rs.Key).Object())
 		case "[]uint":
-			valueLen := len(rs.Value.([]uint))
-			if rs.Length == 0 {
-				object.Value(rs.Key).Array().Length().Equal(valueLen)
-			}
-			length := int(object.Value(rs.Key).Array().Length().Raw())
-			if length > 0 {
-				if valueLen == length {
-					max := length
-					if rs.Length > 0 {
-						max = rs.Length
-					}
-					for i := 0; i < max; i++ {
-						object.Value(rs.Key).Array().Element(i).Number().Equal(rs.Value.([]uint)[i])
-					}
-				} else {
-					object.Value(rs.Key).Array().First().Number().Equal(rs.Value.([]uint)[0])
-				}
-			}
-		case "[]string":
-			if strings.ToLower(rs.Type) == "null" {
-				object.Value(rs.Key).Null()
-			} else if strings.ToLower(rs.Type) == "notnull" {
-				object.Value(rs.Key).NotNull()
+			if rs.Func != nil {
+				rs.Func(object.Value(rs.Key))
 			} else {
-				valueLen := len(rs.Value.([]string))
+				valueLen := len(rs.Value.([]uint))
 				if rs.Length == 0 {
 					object.Value(rs.Key).Array().Length().Equal(valueLen)
 				}
@@ -190,23 +197,56 @@ func (res Responses) Test(object *httpexpect.Object) {
 							max = rs.Length
 						}
 						for i := 0; i < max; i++ {
-							object.Value(rs.Key).Array().Element(i).String().Equal(rs.Value.([]string)[i])
+							object.Value(rs.Key).Array().Element(i).Number().Equal(rs.Value.([]uint)[i])
 						}
 					} else {
-						object.Value(rs.Key).Array().First().String().Equal(rs.Value.([]string)[0])
+						object.Value(rs.Key).Array().First().Number().Equal(rs.Value.([]uint)[0])
+					}
+				}
+			}
+		case "[]string":
+			if rs.Func != nil {
+				rs.Func(object.Value(rs.Key))
+			} else {
+				if strings.ToLower(rs.Type) == "null" {
+					object.Value(rs.Key).Null()
+				} else if strings.ToLower(rs.Type) == "notnull" {
+					object.Value(rs.Key).NotNull()
+				} else {
+					valueLen := len(rs.Value.([]string))
+					if rs.Length == 0 {
+						object.Value(rs.Key).Array().Length().Equal(valueLen)
+					}
+					length := int(object.Value(rs.Key).Array().Length().Raw())
+					if length > 0 {
+						if valueLen == length {
+							max := length
+							if rs.Length > 0 {
+								max = rs.Length
+							}
+							for i := 0; i < max; i++ {
+								object.Value(rs.Key).Array().Element(i).String().Equal(rs.Value.([]string)[i])
+							}
+						} else {
+							object.Value(rs.Key).Array().First().String().Equal(rs.Value.([]string)[0])
+						}
 					}
 				}
 			}
 		case "map[int]string":
-			if strings.ToLower(rs.Type) == "null" {
-				object.Value(rs.Key).Null()
-			} else if strings.ToLower(rs.Type) == "notnull" {
-				object.Value(rs.Key).NotNull()
+			if rs.Func != nil {
+				rs.Func(object.Value(rs.Key))
 			} else {
-				values := rs.Value.(map[int]string)
-				object.Value(rs.Key).Object().Keys().Length().Equal(len(values))
-				for key, v := range values {
-					object.Value(rs.Key).Object().Value(strconv.FormatInt(int64(key), 10)).Equal(v)
+				if strings.ToLower(rs.Type) == "null" {
+					object.Value(rs.Key).Null()
+				} else if strings.ToLower(rs.Type) == "notnull" {
+					object.Value(rs.Key).NotNull()
+				} else {
+					values := rs.Value.(map[int]string)
+					object.Value(rs.Key).Object().Keys().Length().Equal(len(values))
+					for key, v := range values {
+						object.Value(rs.Key).Object().Value(strconv.FormatInt(int64(key), 10)).Equal(v)
+					}
 				}
 			}
 		default:
