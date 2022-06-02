@@ -151,16 +151,15 @@ func (res Responses) Test(object *httpexpect.Object) {
 					object.Value(rs.Key).Array().Length().Equal(valueLen)
 				}
 				if length > 0 {
+					max := 1
+					if rs.Length > 0 {
+						max = rs.Length
+					}
 					if valueLen == length {
-						max := length
-						if rs.Length > 0 {
-							max = rs.Length
-						}
-						for i := 0; i < max; i++ {
-							rs.Value.([]Responses)[i].Test(object.Value(rs.Key).Array().Element(i).Object())
-						}
-					} else {
-						rs.Value.([]Responses)[0].Test(object.Value(rs.Key).Array().First().Object())
+						max = length
+					}
+					for i := 0; i < max; i++ {
+						rs.Value.([]Responses)[i].Test(object.Value(rs.Key).Array().Element(i).Object())
 					}
 				}
 			}
@@ -191,16 +190,15 @@ func (res Responses) Test(object *httpexpect.Object) {
 				}
 				length := int(object.Value(rs.Key).Array().Length().Raw())
 				if length > 0 {
+					max := 1
+					if rs.Length > 0 {
+						max = rs.Length
+					}
 					if valueLen == length {
-						max := length
-						if rs.Length > 0 {
-							max = rs.Length
-						}
-						for i := 0; i < max; i++ {
-							object.Value(rs.Key).Array().Element(i).Number().Equal(rs.Value.([]uint)[i])
-						}
-					} else {
-						object.Value(rs.Key).Array().First().Number().Equal(rs.Value.([]uint)[0])
+						max = length
+					}
+					for i := 0; i < max; i++ {
+						object.Value(rs.Key).Array().Element(i).Number().Equal(rs.Value.([]uint)[i])
 					}
 				}
 			}
@@ -219,16 +217,15 @@ func (res Responses) Test(object *httpexpect.Object) {
 					}
 					length := int(object.Value(rs.Key).Array().Length().Raw())
 					if length > 0 {
+						max := 1
+						if rs.Length > 0 {
+							max = rs.Length
+						}
 						if valueLen == length {
-							max := length
-							if rs.Length > 0 {
-								max = rs.Length
-							}
-							for i := 0; i < max; i++ {
-								object.Value(rs.Key).Array().Element(i).String().Equal(rs.Value.([]string)[i])
-							}
-						} else {
-							object.Value(rs.Key).Array().First().String().Equal(rs.Value.([]string)[0])
+							max = length
+						}
+						for i := 0; i < max; i++ {
+							object.Value(rs.Key).Array().Element(i).String().Equal(rs.Value.([]string)[i])
 						}
 					}
 				}
@@ -287,12 +284,15 @@ func (res Responses) Scan(object *httpexpect.Object) {
 			}
 			length := int(object.Value(rk.Key).Array().Length().Raw())
 			if length > 0 {
+				max := 1
+				if rk.Length > 0 {
+					max = rk.Length
+				}
 				if valueLen == length {
-					for i := 0; i < valueLen; i++ {
-						res[k].Value.([]Responses)[i].Scan(object.Value(rk.Key).Array().Element(i).Object())
-					}
-				} else {
-					res[k].Value.([]Responses)[0].Scan(object.Value(rk.Key).Array().First().Object())
+					max = length
+				}
+				for i := 0; i < max; i++ {
+					res[k].Value.([]Responses)[i].Scan(object.Value(rk.Key).Array().Element(i).Object())
 				}
 			}
 		case "httptest.Responses":
