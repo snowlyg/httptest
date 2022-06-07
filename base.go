@@ -14,6 +14,7 @@ var (
 	httpTestClient *Client
 )
 
+// paramFunc
 type paramFunc func(req *httpexpect.Request) *httpexpect.Request
 
 //NewWithJsonParamFunc return req.WithJSON
@@ -23,6 +24,7 @@ func NewWithJsonParamFunc(query map[string]interface{}) paramFunc {
 	}
 }
 
+// NewWithQueryObjectParamFunc query for get method
 func NewWithQueryObjectParamFunc(query map[string]interface{}) paramFunc {
 	return func(req *httpexpect.Request) *httpexpect.Request {
 		return req.WithQueryObject(query)
@@ -87,6 +89,7 @@ type Client struct {
 	expect *httpexpect.Expect
 }
 
+// Instance return test client instance
 func Instance(t *testing.T, url string, handler http.Handler) *Client {
 	httpTestClient = &Client{
 		t: t,
@@ -107,6 +110,7 @@ func Instance(t *testing.T, url string, handler http.Handler) *Client {
 	return httpTestClient
 }
 
+// Login for http login
 func (c *Client) Login(url string, res Responses, paramFuncs ...paramFunc) (uint, error) {
 	var id uint
 	if len(paramFuncs) == 0 {
@@ -128,6 +132,7 @@ func (c *Client) Login(url string, res Responses, paramFuncs ...paramFunc) (uint
 	return id, nil
 }
 
+// Logout for http logout
 func (c *Client) Logout(url string, res Responses) {
 	if res == nil {
 		res = LogoutResponse
@@ -165,7 +170,7 @@ func (c *Client) PUT(url string, res Responses, paramFuncs ...paramFunc) {
 	res.Test(obj)
 }
 
-// UPLOAD 上传文件
+// UPLOAD
 func (c *Client) UPLOAD(url string, res Responses, paramFuncs ...paramFunc) {
 	req := c.expect.POST(url)
 	if len(paramFuncs) > 0 {

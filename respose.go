@@ -9,10 +9,10 @@ import (
 	"github.com/gavv/httpexpect/v2"
 )
 
-type TestFunc interface {
-}
-
+// Responses
 type Responses []Response
+
+// Response
 type Response struct {
 	Type   string                // httpest type , if empty use  Equal() function to test
 	Key    string                // httptest data's key
@@ -37,6 +37,7 @@ func IdKeys() Responses {
 	}
 }
 
+// Test for data test
 func Test(object *httpexpect.Object, reses ...Responses) {
 	if len(reses) == 0 {
 		return
@@ -65,6 +66,7 @@ func Test(object *httpexpect.Object, reses ...Responses) {
 	}
 }
 
+// Scan scan data form http response
 func Scan(object *httpexpect.Object, reses ...Responses) {
 	if len(reses) == 0 {
 		return
@@ -546,6 +548,7 @@ func (rks Responses) GetInt32(key ...string) int32 {
 	return 0
 }
 
+// GetFloat64 return float64
 func (rks Responses) GetFloat64(key ...string) float64 {
 	if len(key) == 0 {
 		return 0
@@ -587,7 +590,7 @@ func (rks Responses) GetFloat64(key ...string) float64 {
 	return 0
 }
 
-// GetId return id.
+// GetId return id
 func (res Responses) GetId(key ...string) uint {
 	if len(key) == 0 {
 		key = append(key, "data", "id")

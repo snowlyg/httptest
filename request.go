@@ -24,18 +24,19 @@ var (
 			},
 		},
 	}
-	// default logout response params
+	//LogoutResponse default logout response params
 	LogoutResponse = Responses{
 		{Key: "status", Value: http.StatusOK},
 		{Key: "message", Value: "操作成功"},
 	}
 
+	// SuccessResponse default success response params
 	SuccessResponse = Responses{
 		{Key: "status", Value: http.StatusOK},
 		{Key: "message", Value: "操作成功"},
 	}
 
-	// default data response params
+	// ResponsePage default data response params
 	ResponsePage = Responses{
 		{Key: "status", Value: http.StatusOK},
 		{Key: "message", Value: "操作成功"},
