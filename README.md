@@ -11,3 +11,5 @@ http uint test
 #### use case
 
 - [https://github.com/snowlyg/iris-admin](https://github.com/snowlyg/iris-admin)
+- [https://github.com/snowlyg/iris-admin-rbac](https://github.com/snowlyg/iris-admin-rbac)
+- [https://github.com/snowlyg/iris-admin-job](https://github.com/snowlyg/iris-admin-job)
