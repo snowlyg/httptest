@@ -101,52 +101,48 @@ func (res Responses) Test(object *httpexpect.Object) {
 		if rs.Value == nil {
 			continue
 		}
-		reflectTypeString := reflect.TypeOf(rs.Value).String()
-		switch reflectTypeString {
-		case "string":
-			if rs.Func != nil {
-				rs.Func(object.Value(rs.Key))
-			} else {
+		if rs.Func != nil {
+			rs.Func(object.Value(rs.Key))
+
+		} else {
+			reflectTypeString := reflect.TypeOf(rs.Value).String()
+			switch reflectTypeString {
+			case "bool":
+				object.Value(rs.Key).Boolean().Equal(rs.Value.(bool))
+			case "string":
+
 				if strings.ToLower(rs.Type) == "notempty" {
 					object.Value(rs.Key).String().NotEmpty()
 				} else {
 					object.Value(rs.Key).String().Equal(rs.Value.(string))
 				}
-			}
-		case "float64":
-			if rs.Func != nil {
-				rs.Func(object.Value(rs.Key))
-			} else {
+
+			case "float64":
+
 				if strings.ToLower(rs.Type) == "ge" {
 					object.Value(rs.Key).Number().Ge(rs.Value.(float64))
 				} else {
 					object.Value(rs.Key).Number().Equal(rs.Value.(float64))
 				}
-			}
-		case "uint":
-			if rs.Func != nil {
-				rs.Func(object.Value(rs.Key))
-			} else {
+
+			case "uint":
+
 				if strings.ToLower(rs.Type) == "ge" {
 					object.Value(rs.Key).Number().Ge(rs.Value.(uint))
 				} else {
 					object.Value(rs.Key).Number().Equal(rs.Value.(uint))
 				}
-			}
-		case "int":
-			if rs.Func != nil {
-				rs.Func(object.Value(rs.Key))
-			} else {
+
+			case "int":
+
 				if strings.ToLower(rs.Type) == "ge" {
 					object.Value(rs.Key).Number().Ge(rs.Value.(int))
 				} else {
 					object.Value(rs.Key).Number().Equal(rs.Value.(int))
 				}
-			}
-		case "[]httptest.Responses":
-			if rs.Func != nil {
-				rs.Func(object.Value(rs.Key))
-			} else {
+
+			case "[]httptest.Responses":
+
 				valueLen := len(rs.Value.([]Responses))
 				length := int(object.Value(rs.Key).Array().Length().Raw())
 				if rs.Length == 0 {
@@ -164,11 +160,8 @@ func (res Responses) Test(object *httpexpect.Object) {
 						rs.Value.([]Responses)[i].Test(object.Value(rs.Key).Array().Element(i).Object())
 					}
 				}
-			}
-		case "map[int][]httptest.Responses":
-			if rs.Func != nil {
-				rs.Func(object.Value(rs.Key))
-			} else {
+
+			case "map[int][]httptest.Responses":
 				values := rs.Value.(map[int][]Responses)
 				length := len(values)
 				if length > 0 {
@@ -179,13 +172,10 @@ func (res Responses) Test(object *httpexpect.Object) {
 						}
 					}
 				}
-			}
-		case "httptest.Responses":
-			rs.Value.(Responses).Test(object.Value(rs.Key).Object())
-		case "[]uint":
-			if rs.Func != nil {
-				rs.Func(object.Value(rs.Key))
-			} else {
+			case "httptest.Responses":
+				rs.Value.(Responses).Test(object.Value(rs.Key).Object())
+			case "[]uint":
+
 				valueLen := len(rs.Value.([]uint))
 				if rs.Length == 0 {
 					object.Value(rs.Key).Array().Length().Equal(valueLen)
@@ -203,11 +193,9 @@ func (res Responses) Test(object *httpexpect.Object) {
 						object.Value(rs.Key).Array().Element(i).Number().Equal(rs.Value.([]uint)[i])
 					}
 				}
-			}
-		case "[]string":
-			if rs.Func != nil {
-				rs.Func(object.Value(rs.Key))
-			} else {
+
+			case "[]string":
+
 				if strings.ToLower(rs.Type) == "null" {
 					object.Value(rs.Key).Null()
 				} else if strings.ToLower(rs.Type) == "notnull" {
@@ -231,11 +219,7 @@ func (res Responses) Test(object *httpexpect.Object) {
 						}
 					}
 				}
-			}
-		case "map[int]string":
-			if rs.Func != nil {
-				rs.Func(object.Value(rs.Key))
-			} else {
+			case "map[int]string":
 				if strings.ToLower(rs.Type) == "null" {
 					object.Value(rs.Key).Null()
 				} else if strings.ToLower(rs.Type) == "notnull" {
@@ -247,9 +231,9 @@ func (res Responses) Test(object *httpexpect.Object) {
 						object.Value(rs.Key).Object().Value(strconv.FormatInt(int64(key), 10)).Equal(v)
 					}
 				}
+			default:
+				continue
 			}
-		default:
-			continue
 		}
 	}
 	res.Scan(object)
@@ -266,6 +250,8 @@ func (res Responses) Scan(object *httpexpect.Object) {
 		}
 		valueTypeName := reflect.TypeOf(rk.Value).String()
 		switch valueTypeName {
+		case "bool":
+			res[k].Value = object.Value(rk.Key).Boolean().Raw()
 		case "string":
 			res[k].Value = object.Value(rk.Key).String().Raw()
 		case "uint":
