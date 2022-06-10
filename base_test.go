@@ -229,11 +229,12 @@ func TestLogin(t *testing.T) {
 	engine := gin.New()
 	// Create httpexpect instance
 	client := Instance(t, GinHandler(engine))
-	id, err := client.Login("/login", NewResponses(http.StatusOK, "OK", Responses{{Key: "AccessToken", Value: "EIIDFJDIKFJJIdfdkfk.uisdifsdfisdouf"}, {Key: "user", Value: Responses{{Key: "id", Value: 1}}}}))
+	x := Responses{{Key: "AccessToken", Value: "EIIDFJDIKFJJIdfdkfk.uisdifsdfisdouf"}, {Key: "user", Value: Responses{{Key: "id", Value: 1}}}}
+	err := client.Login("/login", "data.AccessToken", NewResponses(http.StatusOK, "OK", x))
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if id == 0 {
+	if x.GetId("data.user.id") == 0 {
 		t.Error("id is 0")
 	}
 	client.GET("/header", NewResponses(http.StatusOK, "操作成功", Responses{{Key: "Authorization", Value: "Bearer EIIDFJDIKFJJIdfdkfk.uisdifsdfisdouf"}}))

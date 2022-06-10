@@ -112,25 +112,23 @@ func Instance(t *testing.T, handler http.Handler, url ...string) *Client {
 }
 
 // Login for http login
-func (c *Client) Login(url string, res Responses, paramFuncs ...paramFunc) (uint, error) {
-	var id uint
+func (c *Client) Login(url, tokenIndex string, res Responses, paramFuncs ...paramFunc) error {
 	if len(paramFuncs) == 0 {
 		paramFuncs = append(paramFuncs, LoginFunc)
 	}
-	if res == nil {
-		res = LoginResponse
-	}
 	c.POST(url, res, paramFuncs...)
-	token := res.GetString("data.AccessToken")
+	token := res.GetString("data.accessToken")
+	if tokenIndex != "" {
+		token = res.GetString(tokenIndex)
+	}
 	fmt.Printf("access_token is '%s'\n", token)
 	if token == "" {
-		return id, fmt.Errorf("access_token is empty")
+		return fmt.Errorf("access_token is empty")
 	}
-	id = res.GetUint("data.user.id")
 	c.expect = c.expect.Builder(func(req *httpexpect.Request) {
 		req.WithHeader("Authorization", str.Join("Bearer ", token))
 	})
-	return id, nil
+	return nil
 }
 
 // Logout for http logout
