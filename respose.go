@@ -110,39 +110,30 @@ func (res Responses) Test(object *httpexpect.Object) {
 			case "bool":
 				object.Value(rs.Key).Boolean().Equal(rs.Value.(bool))
 			case "string":
-
 				if strings.ToLower(rs.Type) == "notempty" {
 					object.Value(rs.Key).String().NotEmpty()
 				} else {
 					object.Value(rs.Key).String().Equal(rs.Value.(string))
 				}
-
 			case "float64":
-
 				if strings.ToLower(rs.Type) == "ge" {
 					object.Value(rs.Key).Number().Ge(rs.Value.(float64))
 				} else {
 					object.Value(rs.Key).Number().Equal(rs.Value.(float64))
 				}
-
 			case "uint":
-
 				if strings.ToLower(rs.Type) == "ge" {
 					object.Value(rs.Key).Number().Ge(rs.Value.(uint))
 				} else {
 					object.Value(rs.Key).Number().Equal(rs.Value.(uint))
 				}
-
 			case "int":
-
 				if strings.ToLower(rs.Type) == "ge" {
 					object.Value(rs.Key).Number().Ge(rs.Value.(int))
 				} else {
 					object.Value(rs.Key).Number().Equal(rs.Value.(int))
 				}
-
 			case "[]httptest.Responses":
-
 				valueLen := len(rs.Value.([]Responses))
 				length := int(object.Value(rs.Key).Array().Length().Raw())
 				if rs.Length == 0 {
@@ -497,7 +488,6 @@ func (rks Responses) GetInt32(key ...string) int32 {
 	if len(key) == 0 {
 		return 0
 	}
-
 	if len(key) == 1 {
 		k := key[0]
 		if strings.Contains(k, ".") {
@@ -508,7 +498,6 @@ func (rks Responses) GetInt32(key ...string) int32 {
 			key = keys
 		}
 	}
-
 	for i := 0; i < len(key); i++ {
 		for m, rk := range rks {
 			if key[i] == rk.Key {
@@ -530,7 +519,6 @@ func (rks Responses) GetInt32(key ...string) int32 {
 			}
 		}
 	}
-
 	return 0
 }
 
@@ -539,7 +527,6 @@ func (rks Responses) GetFloat64(key ...string) float64 {
 	if len(key) == 0 {
 		return 0
 	}
-
 	if len(key) == 1 {
 		k := key[0]
 		if strings.Contains(k, ".") {
@@ -550,7 +537,6 @@ func (rks Responses) GetFloat64(key ...string) float64 {
 			key = keys
 		}
 	}
-
 	for i := 0; i < len(key); i++ {
 		for m, rk := range rks {
 			if key[i] == rk.Key {
@@ -572,7 +558,6 @@ func (rks Responses) GetFloat64(key ...string) float64 {
 			}
 		}
 	}
-
 	return 0
 }
 

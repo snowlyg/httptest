@@ -68,7 +68,6 @@ func NewResponses(status int, message string, data ...Responses) Responses {
 			{Key: "message", Value: message},
 		}
 	}
-
 	if len(data) == 1 {
 		return Responses{
 			{Key: "status", Value: status},
@@ -76,7 +75,6 @@ func NewResponses(status int, message string, data ...Responses) Responses {
 			{Key: "data", Value: data[0]},
 		}
 	}
-
 	return Responses{
 		{Key: "status", Value: status},
 		{Key: "message", Value: message},
@@ -90,22 +88,25 @@ type Client struct {
 }
 
 // Instance return test client instance
-func Instance(t *testing.T, url string, handler http.Handler) *Client {
+func Instance(t *testing.T, handler http.Handler, url ...string) *Client {
+	config := httpexpect.Config{
+		Client: &http.Client{
+			Transport: httpexpect.NewBinder(handler),
+			Jar:       httpexpect.NewJar(),
+		},
+		Reporter: httpexpect.NewAssertReporter(t),
+		Printers: []httpexpect.Printer{
+			httpexpect.NewDebugPrinter(t, true),
+			httpexpect.NewCurlPrinter(t),
+			httpexpect.NewCompactPrinter(t),
+		},
+	}
+	if len(url) == 1 && url[0] != "" {
+		config.BaseURL = url[0]
+	}
 	httpTestClient = &Client{
-		t: t,
-		expect: httpexpect.WithConfig(httpexpect.Config{
-			BaseURL: url,
-			Client: &http.Client{
-				Transport: httpexpect.NewBinder(handler),
-				Jar:       httpexpect.NewJar(),
-			},
-			Reporter: httpexpect.NewAssertReporter(t),
-			Printers: []httpexpect.Printer{
-				httpexpect.NewDebugPrinter(t, true),
-				httpexpect.NewCurlPrinter(t),
-				httpexpect.NewCompactPrinter(t),
-			},
-		}),
+		t:      t,
+		expect: httpexpect.WithConfig(config),
 	}
 	return httpTestClient
 }
@@ -146,6 +147,18 @@ type File struct {
 	Reader io.Reader
 }
 
+// checkStatus check what's http response stauts want
+func checkStatus(res Responses) int {
+	if len(res) == 0 {
+		return http.StatusOK
+	}
+	if res[0].Key != "status" {
+		return http.StatusOK
+	}
+
+	return res[0].Value.(int)
+}
+
 // POST
 func (c *Client) POST(url string, res Responses, paramFuncs ...paramFunc) {
 	req := c.expect.POST(url)
@@ -154,7 +167,7 @@ func (c *Client) POST(url string, res Responses, paramFuncs ...paramFunc) {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(http.StatusOK).JSON().Object()
+	obj := req.Expect().Status(checkStatus(res)).JSON().Object()
 	res.Test(obj)
 }
 
@@ -166,7 +179,7 @@ func (c *Client) PUT(url string, res Responses, paramFuncs ...paramFunc) {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(http.StatusOK).JSON().Object()
+	obj := req.Expect().Status(checkStatus(res)).JSON().Object()
 	res.Test(obj)
 }
 
@@ -178,7 +191,7 @@ func (c *Client) UPLOAD(url string, res Responses, paramFuncs ...paramFunc) {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(http.StatusOK).JSON().Object()
+	obj := req.Expect().Status(checkStatus(res)).JSON().Object()
 	res.Test(obj)
 }
 
@@ -190,7 +203,7 @@ func (c *Client) GET(url string, res Responses, paramFuncs ...paramFunc) {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(http.StatusOK).JSON().Object()
+	obj := req.Expect().Status(checkStatus(res)).JSON().Object()
 	res.Test(obj)
 }
 
@@ -202,7 +215,7 @@ func (c *Client) DOWNLOAD(url string, res Responses, paramFuncs ...paramFunc) st
 			req = f(req)
 		}
 	}
-	return req.Expect().Status(http.StatusOK).ContentType("application/octet-stream").Body().NotEmpty().Raw()
+	return req.Expect().Status(checkStatus(res)).ContentType("application/octet-stream").Body().NotEmpty().Raw()
 }
 
 // DELETE
@@ -213,6 +226,6 @@ func (c *Client) DELETE(url string, res Responses, paramFuncs ...paramFunc) {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(http.StatusOK).JSON().Object()
+	obj := req.Expect().Status(checkStatus(res)).JSON().Object()
 	res.Test(obj)
 }
