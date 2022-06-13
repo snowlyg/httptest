@@ -54,16 +54,6 @@ func NewResponsesWithLength(status int, message string, data []Responses, length
 	}
 }
 
-//NewResponsesWithHttpStatus return Responses with http response status
-func NewResponsesWithHttpStatus(status int, message string, data []Responses, httpStatus int) Responses {
-	return Responses{
-		{Key: "http_status", Value: httpStatus},
-		{Key: "status", Value: status},
-		{Key: "message", Value: message},
-		{Key: "data", Value: data},
-	}
-}
-
 //NewResponses return Responses
 func NewResponses(status int, message string, data ...Responses) Responses {
 	if status != http.StatusOK {
@@ -95,6 +85,7 @@ func NewResponses(status int, message string, data ...Responses) Responses {
 type Client struct {
 	t      *testing.T
 	expect *httpexpect.Expect
+	status int
 }
 
 // Instance return test client instance
@@ -156,15 +147,17 @@ type File struct {
 }
 
 // checkStatus check what's http response stauts want
-func checkStatus(res Responses) int {
-	if len(res) == 0 {
+func (c *Client) checkStatus() int {
+	if c.status == 0 {
 		return http.StatusOK
 	}
-	if res[0].Key != "http_status" {
-		return http.StatusOK
-	}
+	return c.status
+}
 
-	return res[0].Value.(int)
+// SetStatus set what's http response stauts want
+func (c *Client) SetStatus(status int) *Client {
+	c.status = status
+	return c
 }
 
 // POST
@@ -175,7 +168,7 @@ func (c *Client) POST(url string, res Responses, paramFuncs ...paramFunc) {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(checkStatus(res)).JSON().Object()
+	obj := req.Expect().Status(c.checkStatus()).JSON().Object()
 	res.Test(obj)
 }
 
@@ -187,7 +180,7 @@ func (c *Client) PUT(url string, res Responses, paramFuncs ...paramFunc) {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(checkStatus(res)).JSON().Object()
+	obj := req.Expect().Status(c.checkStatus()).JSON().Object()
 	res.Test(obj)
 }
 
@@ -199,7 +192,7 @@ func (c *Client) UPLOAD(url string, res Responses, paramFuncs ...paramFunc) {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(checkStatus(res)).JSON().Object()
+	obj := req.Expect().Status(c.checkStatus()).JSON().Object()
 	res.Test(obj)
 }
 
@@ -211,7 +204,7 @@ func (c *Client) GET(url string, res Responses, paramFuncs ...paramFunc) {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(checkStatus(res)).JSON().Object()
+	obj := req.Expect().Status(c.checkStatus()).JSON().Object()
 	res.Test(obj)
 }
 
@@ -223,7 +216,7 @@ func (c *Client) DOWNLOAD(url string, res Responses, paramFuncs ...paramFunc) st
 			req = f(req)
 		}
 	}
-	return req.Expect().Status(checkStatus(res)).ContentType("application/octet-stream").Body().NotEmpty().Raw()
+	return req.Expect().Status(c.checkStatus()).ContentType("application/octet-stream").Body().NotEmpty().Raw()
 }
 
 // DELETE
@@ -234,6 +227,6 @@ func (c *Client) DELETE(url string, res Responses, paramFuncs ...paramFunc) {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(checkStatus(res)).JSON().Object()
+	obj := req.Expect().Status(c.checkStatus()).JSON().Object()
 	res.Test(obj)
 }

@@ -189,7 +189,7 @@ func TestNewResponses(t *testing.T) {
 
 	client.GET("/example", NewResponses(http.StatusOK, "OK", Responses{{Key: "message", Value: "pong"}}))
 	client.GET("/mutil", NewResponses(http.StatusOK, "OK", Responses{{Key: "message", Value: "pong"}}, Responses{{Key: "message", Value: "pong"}}))
-	client.POST("/example", NewResponses(http.StatusBadRequest, "FAIL"))
+	client.SetStatus(http.StatusBadRequest).POST("/example", NewResponses(http.StatusBadRequest, "FAIL", nil))
 }
 
 func TestNewResponsesWithLength(t *testing.T) {
@@ -208,21 +208,6 @@ func TestNewWithFileParamFunc(t *testing.T) {
 	fh, _ := os.Open("./" + name)
 	defer fh.Close()
 	client.UPLOAD("/upload", SuccessResponse, NewWithFileParamFunc([]File{{Key: "file", Path: name, Reader: fh}}))
-}
-
-func TestCheckStatus(t *testing.T) {
-	status := checkStatus(NewResponses(http.StatusOK, "OK"))
-	if status != http.StatusOK {
-		t.Errorf("checkStatus want %d but get %d", http.StatusOK, status)
-	}
-	status = checkStatus(NewResponsesWithHttpStatus(http.StatusBadRequest, "FAIL", nil, http.StatusBadRequest))
-	if status != http.StatusBadRequest {
-		t.Errorf("checkStatus want %d but get %d", http.StatusBadRequest, status)
-	}
-	status = checkStatus(Responses{})
-	if status != http.StatusOK {
-		t.Errorf("checkStatus want %d but get %d", http.StatusOK, status)
-	}
 }
 
 func TestLogin(t *testing.T) {
