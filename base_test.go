@@ -215,7 +215,7 @@ func TestCheckStatus(t *testing.T) {
 	if status != http.StatusOK {
 		t.Errorf("checkStatus want %d but get %d", http.StatusOK, status)
 	}
-	status = checkStatus(NewResponses(http.StatusBadRequest, "FAIL"))
+	status = checkStatus(NewResponsesWithHttpStatus(http.StatusBadRequest, "FAIL", nil, http.StatusBadRequest))
 	if status != http.StatusBadRequest {
 		t.Errorf("checkStatus want %d but get %d", http.StatusBadRequest, status)
 	}

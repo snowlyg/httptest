@@ -54,6 +54,16 @@ func NewResponsesWithLength(status int, message string, data []Responses, length
 	}
 }
 
+//NewResponsesWithHttpStatus return Responses with http response status
+func NewResponsesWithHttpStatus(status int, message string, data []Responses, httpStatus int) Responses {
+	return Responses{
+		{Key: "http_status", Value: httpStatus},
+		{Key: "status", Value: status},
+		{Key: "message", Value: message},
+		{Key: "data", Value: data},
+	}
+}
+
 //NewResponses return Responses
 func NewResponses(status int, message string, data ...Responses) Responses {
 	if status != http.StatusOK {
@@ -150,7 +160,7 @@ func checkStatus(res Responses) int {
 	if len(res) == 0 {
 		return http.StatusOK
 	}
-	if res[0].Key != "status" {
+	if res[0].Key != "http_status" {
 		return http.StatusOK
 	}
 
