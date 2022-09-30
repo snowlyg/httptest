@@ -17,7 +17,7 @@ var (
 	// default login response params
 	LoginResponse = Responses{
 		{Key: "status", Value: http.StatusOK},
-		{Key: "message", Value: "操作成功"},
+		{Key: "message", Value: "OK"},
 		{Key: "data",
 			Value: Responses{
 				{Key: "accessToken", Value: "", Type: "notempty"},
@@ -27,19 +27,19 @@ var (
 	//LogoutResponse default logout response params
 	LogoutResponse = Responses{
 		{Key: "status", Value: http.StatusOK},
-		{Key: "message", Value: "操作成功"},
+		{Key: "message", Value: "OK"},
 	}
 
 	// SuccessResponse default success response params
 	SuccessResponse = Responses{
 		{Key: "status", Value: http.StatusOK},
-		{Key: "message", Value: "操作成功"},
+		{Key: "message", Value: "OK"},
 	}
 
 	// ResponsePage default data response params
 	ResponsePage = Responses{
 		{Key: "status", Value: http.StatusOK},
-		{Key: "message", Value: "操作成功"},
+		{Key: "message", Value: "OK"},
 		{Key: "data", Value: Responses{
 			{Key: "pageSize", Value: 10},
 			{Key: "page", Value: 1},

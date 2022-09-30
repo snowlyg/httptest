@@ -96,7 +96,7 @@ func GinHandler(r *gin.Engine) *gin.Engine {
 
 		c.JSON(http.StatusOK, gin.H{
 			"status":  200,
-			"message": "操作成功",
+			"message": "OK",
 		})
 	})
 
@@ -138,7 +138,7 @@ func GinHandler(r *gin.Engine) *gin.Engine {
 	r.GET("logout", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  200,
-			"message": "操作成功",
+			"message": "OK",
 		})
 	})
 
@@ -147,7 +147,7 @@ func GinHandler(r *gin.Engine) *gin.Engine {
 		c.GetHeader("Authorization")
 		c.JSON(http.StatusOK, gin.H{
 			"status":  200,
-			"message": "操作成功",
+			"message": "OK",
 			"data": gin.H{
 				"Authorization": c.GetHeader("Authorization"),
 			},
@@ -222,7 +222,7 @@ func TestLogin(t *testing.T) {
 	if x.GetId("data.user.id") == 0 {
 		t.Error("id is 0")
 	}
-	client.GET("/header", NewResponses(http.StatusOK, "操作成功", Responses{{Key: "Authorization", Value: "Bearer EIIDFJDIKFJJIdfdkfk.uisdifsdfisdouf"}}))
+	client.GET("/header", NewResponses(http.StatusOK, "OK", Responses{{Key: "Authorization", Value: "Bearer EIIDFJDIKFJJIdfdkfk.uisdifsdfisdouf"}}))
 }
 
 func TestLogout(t *testing.T) {
