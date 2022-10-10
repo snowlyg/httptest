@@ -17,7 +17,7 @@ var (
 // paramFunc
 type paramFunc func(req *httpexpect.Request) *httpexpect.Request
 
-//NewWithJsonParamFunc return req.WithJSON
+// NewWithJsonParamFunc return req.WithJSON
 func NewWithJsonParamFunc(query map[string]interface{}) paramFunc {
 	return func(req *httpexpect.Request) *httpexpect.Request {
 		return req.WithJSON(query)
@@ -31,7 +31,7 @@ func NewWithQueryObjectParamFunc(query map[string]interface{}) paramFunc {
 	}
 }
 
-//NewWithFileParamFunc return req.WithFile
+// NewWithFileParamFunc return req.WithFile
 func NewWithFileParamFunc(fs []File) paramFunc {
 	return func(req *httpexpect.Request) *httpexpect.Request {
 		if len(fs) == 0 {
@@ -45,7 +45,7 @@ func NewWithFileParamFunc(fs []File) paramFunc {
 	}
 }
 
-//NewResponsesWithLength return Responses with length value for data key
+// NewResponsesWithLength return Responses with length value for data key
 func NewResponsesWithLength(status int, message string, data []Responses, length int) Responses {
 	return Responses{
 		{Key: "status", Value: status},
@@ -54,7 +54,7 @@ func NewResponsesWithLength(status int, message string, data []Responses, length
 	}
 }
 
-//NewResponses return Responses
+// NewResponses return Responses
 func NewResponses(status int, message string, data ...Responses) Responses {
 	if status != http.StatusOK {
 		return Responses{
@@ -83,9 +83,10 @@ func NewResponses(status int, message string, data ...Responses) Responses {
 }
 
 type Client struct {
-	t      *testing.T
-	expect *httpexpect.Expect
-	status int
+	t       *testing.T
+	expect  *httpexpect.Expect
+	status  int
+	headers map[string]string
 }
 
 // Instance return test client instance
@@ -106,8 +107,9 @@ func Instance(t *testing.T, handler http.Handler, url ...string) *Client {
 		config.BaseURL = url[0]
 	}
 	httpTestClient = &Client{
-		t:      t,
-		expect: httpexpect.WithConfig(config),
+		t:       t,
+		expect:  httpexpect.WithConfig(config),
+		headers: map[string]string{},
 	}
 	return httpTestClient
 }
@@ -126,8 +128,9 @@ func (c *Client) Login(url, tokenIndex string, res Responses, paramFuncs ...para
 	if token == "" {
 		return fmt.Errorf("access_token is empty")
 	}
+	c.headers["Authorization"] = str.Join("Bearer ", token)
 	c.expect = c.expect.Builder(func(req *httpexpect.Request) {
-		req.WithHeader("Authorization", str.Join("Bearer ", token))
+		req.WithHeaders(c.headers)
 	})
 	return nil
 }
@@ -157,6 +160,12 @@ func (c *Client) checkStatus() int {
 // SetStatus set what's http response stauts want
 func (c *Client) SetStatus(status int) *Client {
 	c.status = status
+	return c
+}
+
+// SetHeaders set http request headers
+func (c *Client) SetHeaders(headers map[string]string) *Client {
+	c.headers = headers
 	return c
 }
 
