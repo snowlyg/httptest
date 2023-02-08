@@ -5,9 +5,11 @@ import (
 	"io"
 	"net/http"
 	"testing"
+	"text/template"
 
 	"github.com/gavv/httpexpect/v2"
 	"github.com/snowlyg/helper/str"
+	"golang.org/x/text/cases"
 )
 
 var (
@@ -134,13 +136,16 @@ func Instance(t *testing.T, handler http.Handler, url ...string) *Client {
 	config := httpexpect.Config{
 		Client: &http.Client{
 			Transport: httpexpect.NewBinder(handler),
-			Jar:       httpexpect.NewJar(),
+			Jar:       httpexpect.NewCookieJar(),
 		},
 		Reporter: httpexpect.NewAssertReporter(t),
 		Printers: []httpexpect.Printer{
 			httpexpect.NewDebugPrinter(t, true),
-			httpexpect.NewCurlPrinter(t),
-			httpexpect.NewCompactPrinter(t),
+		},
+		Formatter: &httpexpect.DefaultFormatter{
+			SuccessTemplate: "...",
+			FailureTemplate: "...",
+			TemplateFuncs:   template.FuncMap{"title": cases.Title},
 		},
 	}
 	if len(url) == 1 && url[0] != "" {
