@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"testing"
 	"text/template"
 
 	"github.com/gavv/httpexpect/v2"
 	"github.com/snowlyg/helper/str"
-	"golang.org/x/text/cases"
 )
 
 var (
@@ -131,6 +131,32 @@ type Client struct {
 	headers map[string]string
 }
 
+var failureTemplate = `
+Test Failure!
+	test name: {{ .TestName | underscore }}
+	request name: {{ .RequestName }}
+	error details: {{ .Errors }}
+	actual value: {{ .Actual }}
+	reference value: {{ .Reference }}
+`
+
+var successTemplate = `
+Test Success!
+	test name: {{ .TestName | underscore }}
+	request name: {{ .RequestName }}
+`
+
+var templateFuncs = template.FuncMap{
+	"underscore": func(s string) string {
+		var sb strings.Builder
+
+		elems := strings.Split(s, " ")
+		sb.WriteString(strings.Join(elems, "_"))
+
+		return sb.String()
+	},
+}
+
 // Instance return test client instance
 func Instance(t *testing.T, handler http.Handler, url ...string) *Client {
 	config := httpexpect.Config{
@@ -143,9 +169,9 @@ func Instance(t *testing.T, handler http.Handler, url ...string) *Client {
 			httpexpect.NewDebugPrinter(t, true),
 		},
 		Formatter: &httpexpect.DefaultFormatter{
-			SuccessTemplate: "...",
-			FailureTemplate: "...",
-			TemplateFuncs:   template.FuncMap{"title": cases.Title},
+			SuccessTemplate: successTemplate,
+			FailureTemplate: failureTemplate,
+			TemplateFuncs:   templateFuncs,
 		},
 	}
 	if len(url) == 1 && url[0] != "" {

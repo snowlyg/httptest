@@ -1,10 +1,10 @@
 # httptest
 
-[![Build Status](https://app.travis-ci.com/snowlyg/httptest.svg?branch=main)](https://app.travis-ci.com/snowlyg/httptest)
+<!-- [![Build Status](https://app.travis-ci.com/snowlyg/httptest.svg?branch=main)](https://app.travis-ci.com/snowlyg/httptest) -->
 [![LICENSE](https://img.shields.io/github/license/snowlyg/httptest)](https://github.com/snowlyg/httptest/blob/main/LICENSE)
 [![go doc](https://godoc.org/github.com/snowlyg/httptest?status.svg)](https://godoc.org/github.com/snowlyg/httptest)
 [![go report](https://goreportcard.com/badge/github.com/snowlyg/httptest)](https://goreportcard.com/badge/github.com/snowlyg/httptest)
-[![Build Status](https://codecov.io/gh/snowlyg/httptest/branch/main/graph/badge.svg)](https://codecov.io/gh/snowlyg/httptest)
+[![Codecov](https://codecov.io/gh/snowlyg/httptest/branch/main/graph/badge.svg)](https://codecov.io/gh/snowlyg/httptest)
 
 http uint test
 
