@@ -140,12 +140,6 @@ Test Failure!
 	reference value: {{ .Reference }}
 `
 
-var successTemplate = `
-Test Success!
-	test name: {{ .TestName | underscore }}
-	request name: {{ .RequestName }}
-`
-
 var templateFuncs = template.FuncMap{
 	"underscore": func(s string) string {
 		var sb strings.Builder
@@ -155,6 +149,22 @@ var templateFuncs = template.FuncMap{
 
 		return sb.String()
 	},
+}
+
+type defulterAssertionHandler struct {
+	ctx     *httpexpect.AssertionContext
+	failure *httpexpect.AssertionFailure
+}
+
+func (h *defulterAssertionHandler) Success(ctx *httpexpect.AssertionContext) {
+	h.ctx = ctx
+}
+
+func (h *defulterAssertionHandler) Failure(
+	ctx *httpexpect.AssertionContext, failure *httpexpect.AssertionFailure,
+) {
+	h.ctx = ctx
+	h.failure = failure
 }
 
 // Instance return test client instance
@@ -168,10 +178,13 @@ func Instance(t *testing.T, handler http.Handler, url ...string) *Client {
 		Printers: []httpexpect.Printer{
 			httpexpect.NewDebugPrinter(t, true),
 		},
-		Formatter: &httpexpect.DefaultFormatter{
-			SuccessTemplate: successTemplate,
-			FailureTemplate: failureTemplate,
-			TemplateFuncs:   templateFuncs,
+		AssertionHandler: &httpexpect.DefaultAssertionHandler{
+			Formatter: &httpexpect.DefaultFormatter{
+				TemplateFuncs: templateFuncs,
+			},
+			Reporter: t,
+			// to enable printing of success messages, we need to set `Logger`
+			Logger: t,
 		},
 	}
 	if len(url) == 1 && url[0] != "" {
