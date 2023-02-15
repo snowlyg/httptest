@@ -103,6 +103,8 @@ github.com/snowlyg/helper v0.1.36 h1:rUdwegv3Ds3JzjS0/z8sMal1/kTQshq+bPa1ZMru9CE
 github.com/snowlyg/helper v0.1.36/go.mod h1:/uAwFSceu4L27DdY0AvRhM5HMO0vhVoIXdFH3CyezZY=
 github.com/snowlyg/helper v0.1.37 h1:7JiwMoQH/FbbzKGtmGwWOeI6ZzwOvZkEgirDeKbVxms=
 github.com/snowlyg/helper v0.1.37/go.mod h1:/uAwFSceu4L27DdY0AvRhM5HMO0vhVoIXdFH3CyezZY=
+github.com/snowlyg/helper v0.1.41 h1:SPqSHxHRcunpuwMxjMLASu2xIrmfQSjadQjQCP9wmZA=
+github.com/snowlyg/helper v0.1.41/go.mod h1:/uAwFSceu4L27DdY0AvRhM5HMO0vhVoIXdFH3CyezZY=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v0.0.0-20161117074351-18a02ba4a312/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=

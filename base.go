@@ -131,15 +131,6 @@ type Client struct {
 	headers map[string]string
 }
 
-var failureTemplate = `
-Test Failure!
-	test name: {{ .TestName | underscore }}
-	request name: {{ .RequestName }}
-	error details: {{ .Errors }}
-	actual value: {{ .Actual }}
-	reference value: {{ .Reference }}
-`
-
 var templateFuncs = template.FuncMap{
 	"underscore": func(s string) string {
 		var sb strings.Builder
@@ -180,11 +171,12 @@ func Instance(t *testing.T, handler http.Handler, url ...string) *Client {
 		},
 		AssertionHandler: &httpexpect.DefaultAssertionHandler{
 			Formatter: &httpexpect.DefaultFormatter{
-				TemplateFuncs: templateFuncs,
+				TemplateFuncs:   templateFuncs,
+				SuccessTemplate: "[OK]",
 			},
 			Reporter: t,
 			// to enable printing of success messages, we need to set `Logger`
-			Logger: t,
+			Logger: nil,
 		},
 	}
 	if len(url) == 1 && url[0] != "" {
