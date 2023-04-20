@@ -40,6 +40,16 @@ func GinHandler(r *gin.Engine) *gin.Engine {
 	})
 
 	// Add route to the gin engine
+	r.GET("/array", func(c *gin.Context) {
+		var req Request
+		if errs := c.ShouldBind(&req); errs != nil {
+			c.JSON(http.StatusBadRequest, nil)
+			return
+		}
+		c.JSON(http.StatusOK, []string{"1", "2"})
+	})
+
+	// Add route to the gin engine
 	r.GET("/mutil", func(c *gin.Context) {
 		var req Request
 		if errs := c.ShouldBind(&req); errs != nil {
