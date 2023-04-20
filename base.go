@@ -3,6 +3,7 @@ package httptest
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"testing"
@@ -246,55 +247,91 @@ func (c *Client) SetHeaders(headers map[string]string) *Client {
 }
 
 // POST
-func (c *Client) POST(url string, res Responses, paramFuncs ...paramFunc) {
+func (c *Client) POST(url string, res interface{}, paramFuncs ...paramFunc) {
 	req := c.expect.POST(url)
 	if len(paramFuncs) > 0 {
 		for _, f := range paramFuncs {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(c.checkStatus()).JSON().Object()
-	res.Test(obj)
+	if testRes, ok := res.(Responses); ok {
+		obj := req.Expect().Status(c.checkStatus()).JSON().Object()
+		testRes.Test(obj)
+	} else if testRes, ok := res.([]Responses); ok {
+		array := req.Expect().Status(c.checkStatus()).JSON().Array()
+		for i, v := range testRes {
+			v.Test(array.Element(i).Object())
+		}
+	} else {
+		log.Println("data type error")
+	}
 }
 
 // PUT
-func (c *Client) PUT(url string, res Responses, paramFuncs ...paramFunc) {
+func (c *Client) PUT(url string, res interface{}, paramFuncs ...paramFunc) {
 	req := c.expect.PUT(url)
 	if len(paramFuncs) > 0 {
 		for _, f := range paramFuncs {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(c.checkStatus()).JSON().Object()
-	res.Test(obj)
+	if testRes, ok := res.(Responses); ok {
+		obj := req.Expect().Status(c.checkStatus()).JSON().Object()
+		testRes.Test(obj)
+	} else if testRes, ok := res.([]Responses); ok {
+		array := req.Expect().Status(c.checkStatus()).JSON().Array()
+		for i, v := range testRes {
+			v.Test(array.Element(i).Object())
+		}
+	} else {
+		log.Println("data type error")
+	}
 }
 
 // UPLOAD
-func (c *Client) UPLOAD(url string, res Responses, paramFuncs ...paramFunc) {
+func (c *Client) UPLOAD(url string, res interface{}, paramFuncs ...paramFunc) {
 	req := c.expect.POST(url)
 	if len(paramFuncs) > 0 {
 		for _, f := range paramFuncs {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(c.checkStatus()).JSON().Object()
-	res.Test(obj)
+	if testRes, ok := res.(Responses); ok {
+		obj := req.Expect().Status(c.checkStatus()).JSON().Object()
+		testRes.Test(obj)
+	} else if testRes, ok := res.([]Responses); ok {
+		array := req.Expect().Status(c.checkStatus()).JSON().Array()
+		for i, v := range testRes {
+			v.Test(array.Element(i).Object())
+		}
+	} else {
+		log.Println("data type error")
+	}
 }
 
 // GET
-func (c *Client) GET(url string, res Responses, paramFuncs ...paramFunc) {
+func (c *Client) GET(url string, res interface{}, paramFuncs ...paramFunc) {
 	req := c.expect.GET(url)
 	if len(paramFuncs) > 0 {
 		for _, f := range paramFuncs {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(c.checkStatus()).JSON().Object()
-	res.Test(obj)
+	if testRes, ok := res.(Responses); ok {
+		obj := req.Expect().Status(c.checkStatus()).JSON().Object()
+		testRes.Test(obj)
+	} else if testRes, ok := res.([]Responses); ok {
+		array := req.Expect().Status(c.checkStatus()).JSON().Array()
+		for i, v := range testRes {
+			v.Test(array.Element(i).Object())
+		}
+	} else {
+		log.Println("data type error")
+	}
 }
 
 // DOWNLOAD
-func (c *Client) DOWNLOAD(url string, res Responses, paramFuncs ...paramFunc) string {
+func (c *Client) DOWNLOAD(url string, res interface{}, paramFuncs ...paramFunc) string {
 	req := c.expect.GET(url)
 	if len(paramFuncs) > 0 {
 		for _, f := range paramFuncs {
@@ -305,13 +342,22 @@ func (c *Client) DOWNLOAD(url string, res Responses, paramFuncs ...paramFunc) st
 }
 
 // DELETE
-func (c *Client) DELETE(url string, res Responses, paramFuncs ...paramFunc) {
+func (c *Client) DELETE(url string, res interface{}, paramFuncs ...paramFunc) {
 	req := c.expect.DELETE(url)
 	if len(paramFuncs) > 0 {
 		for _, f := range paramFuncs {
 			req = f(req)
 		}
 	}
-	obj := req.Expect().Status(c.checkStatus()).JSON().Object()
-	res.Test(obj)
+	if testRes, ok := res.(Responses); ok {
+		obj := req.Expect().Status(c.checkStatus()).JSON().Object()
+		testRes.Test(obj)
+	} else if testRes, ok := res.([]Responses); ok {
+		array := req.Expect().Status(c.checkStatus()).JSON().Array()
+		for i, v := range testRes {
+			v.Test(array.Element(i).Object())
+		}
+	} else {
+		log.Println("data type error")
+	}
 }
