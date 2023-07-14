@@ -203,8 +203,10 @@ func (res Responses) Test(value *httpexpect.Value) {
 					if valueLen == length {
 						max = length
 					}
-					for i := 0; i < max; i++ {
-						rs.Value.([]Responses)[i].Test(value.Object().Value(rs.Key).Array().Element(i))
+					if valueLen > 0 {
+						for i := 0; i < max; i++ {
+							rs.Value.([]Responses)[i].Test(value.Object().Value(rs.Key).Array().Element(i))
+						}
 					}
 				}
 
