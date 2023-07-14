@@ -203,8 +203,10 @@ func (res Responses) Test(value *httpexpect.Value) {
 					if valueLen == length {
 						max = length
 					}
-					for i := 0; i < max; i++ {
-						rs.Value.([]Responses)[i].Test(value.Object().Value(rs.Key).Array().Element(i))
+					if valueLen > 0 {
+						for i := 0; i < max; i++ {
+							rs.Value.([]Responses)[i].Test(value.Object().Value(rs.Key).Array().Element(i))
+						}
 					}
 				}
 
@@ -326,8 +328,10 @@ func (res Responses) Scan(object *httpexpect.Object) {
 				if valueLen == length {
 					max = length
 				}
-				for i := 0; i < max; i++ {
-					res[k].Value.([]Responses)[i].Scan(object.Value(rk.Key).Array().Element(i).Object())
+				if valueLen > 0 {
+					for i := 0; i < max; i++ {
+						res[k].Value.([]Responses)[i].Scan(object.Value(rk.Key).Array().Element(i).Object())
+					}
 				}
 			}
 		case "httptest.Responses":
