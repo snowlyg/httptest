@@ -148,7 +148,7 @@ func NewClient(t *testing.T, handler http.Handler, url ...string) *Client {
 		},
 		Reporter: httpexpect.NewAssertReporter(t),
 		Printers: []httpexpect.Printer{
-			httpexpect.NewDebugPrinter(t, true),
+			NewDebugPrinter(t, true),
 			// httpexpect.NewCompactPrinter(t),
 			// httpexpect.NewCurlPrinter(t),
 		},
