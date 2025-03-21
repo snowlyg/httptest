@@ -5,9 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 	"testing"
-	"text/template"
 
 	"github.com/gavv/httpexpect/v2"
 	"github.com/snowlyg/helper/str"
@@ -33,11 +31,6 @@ var (
 				{Key: "accessToken", Value: "", Type: "notempty"},
 			},
 		},
-	}
-	//LogoutResponse default logout response params
-	LogoutResponse = Responses{
-		{Key: "status", Value: http.StatusOK},
-		{Key: "message", Value: "OK"},
 	}
 
 	// SuccessResponse default success response params
@@ -75,7 +68,7 @@ func NewWithQueryObjectParamFunc(query map[string]interface{}) paramFunc {
 }
 
 // NewWithFileParamFunc return req.WithFile
-func NewWithFileParamFunc(fs []File) paramFunc {
+func NewWithFileParamFunc(fs []File, query map[string]interface{}) paramFunc {
 	return func(req *httpexpect.Request) *httpexpect.Request {
 		if len(fs) == 0 {
 			return req
@@ -84,7 +77,20 @@ func NewWithFileParamFunc(fs []File) paramFunc {
 		for _, f := range fs {
 			req = req.WithFile(f.Key, f.Path, f.Reader)
 		}
-		return req
+		if query == nil {
+			return req
+		}
+		return req.WithForm(query)
+	}
+}
+
+// NewWithFormParamFunc
+func NewWithFormParamFunc(query map[string]interface{}) paramFunc {
+	return func(req *httpexpect.Request) *httpexpect.Request {
+		if query == nil {
+			return req
+		}
+		return req.WithMultipart().WithForm(query)
 	}
 }
 
@@ -132,36 +138,10 @@ type Client struct {
 	headers map[string]string
 }
 
-var templateFuncs = template.FuncMap{
-	"underscore": func(s string) string {
-		var sb strings.Builder
-
-		elems := strings.Split(s, " ")
-		sb.WriteString(strings.Join(elems, "_"))
-
-		return sb.String()
-	},
-}
-
-type defulterAssertionHandler struct {
-	ctx     *httpexpect.AssertionContext
-	failure *httpexpect.AssertionFailure
-}
-
-func (h *defulterAssertionHandler) Success(ctx *httpexpect.AssertionContext) {
-	h.ctx = ctx
-}
-
-func (h *defulterAssertionHandler) Failure(
-	ctx *httpexpect.AssertionContext, failure *httpexpect.AssertionFailure,
-) {
-	h.ctx = ctx
-	h.failure = failure
-}
-
-// Instance return test client instance
-func Instance(t *testing.T, handler http.Handler, url ...string) *Client {
+// NewClient return test client instance
+func NewClient(t *testing.T, handler http.Handler, url ...string) *Client {
 	config := httpexpect.Config{
+		TestName: t.Name(),
 		Client: &http.Client{
 			Transport: httpexpect.NewBinder(handler),
 			Jar:       httpexpect.NewCookieJar(),
@@ -169,15 +149,18 @@ func Instance(t *testing.T, handler http.Handler, url ...string) *Client {
 		Reporter: httpexpect.NewAssertReporter(t),
 		Printers: []httpexpect.Printer{
 			httpexpect.NewDebugPrinter(t, true),
+			// httpexpect.NewCompactPrinter(t),
+			// httpexpect.NewCurlPrinter(t),
 		},
-		AssertionHandler: &httpexpect.DefaultAssertionHandler{
-			Formatter: &httpexpect.DefaultFormatter{
-				TemplateFuncs:   templateFuncs,
-				SuccessTemplate: "[OK]",
-			},
-			Reporter: t,
-			// to enable printing of success messages, we need to set `Logger`
-			Logger: nil,
+		// Printers: []httpexpect.Printer{
+		// 	httpexpect.NewCompactPrinter(t),
+		// },
+		Formatter: &httpexpect.DefaultFormatter{
+			// DisablePaths: true,
+			// DisableDiffs: true,
+			// FloatFormat:  httpexpect.FloatFormatScientific,
+			ColorMode: httpexpect.ColorModeAlways,
+			// LineWidth:    80,
 		},
 	}
 	if len(url) == 1 && url[0] != "" {
@@ -215,7 +198,7 @@ func (c *Client) Login(url, tokenIndex string, res Responses, paramFuncs ...para
 // Logout for http logout
 func (c *Client) Logout(url string, res Responses) {
 	if res == nil {
-		res = LogoutResponse
+		res = SuccessResponse
 	}
 	c.GET(url, res)
 }
@@ -260,7 +243,7 @@ func (c *Client) POST(url string, res interface{}, paramFuncs ...paramFunc) {
 	} else if testRes, ok := res.([]Responses); ok {
 		array := req.Expect().Status(c.checkStatus()).JSON().Array()
 		for i, v := range testRes {
-			v.Test(array.Element(i))
+			v.Test(array.Value(i))
 		}
 	} else {
 		log.Println("data type error")
@@ -281,7 +264,7 @@ func (c *Client) PUT(url string, res interface{}, paramFuncs ...paramFunc) {
 	} else if testRes, ok := res.([]Responses); ok {
 		array := req.Expect().Status(c.checkStatus()).JSON().Array()
 		for i, v := range testRes {
-			v.Test(array.Element(i))
+			v.Test(array.Value(i))
 		}
 	} else {
 		log.Println("data type error")
@@ -302,7 +285,7 @@ func (c *Client) UPLOAD(url string, res interface{}, paramFuncs ...paramFunc) {
 	} else if testRes, ok := res.([]Responses); ok {
 		array := req.Expect().Status(c.checkStatus()).JSON().Array()
 		for i, v := range testRes {
-			v.Test(array.Element(i))
+			v.Test(array.Value(i))
 		}
 	} else {
 		log.Println("data type error")
@@ -323,7 +306,7 @@ func (c *Client) GET(url string, res interface{}, paramFuncs ...paramFunc) {
 	} else if testRes, ok := res.([]Responses); ok {
 		array := req.Expect().Status(c.checkStatus()).JSON().Array()
 		for i, v := range testRes {
-			v.Test(array.Element(i))
+			v.Test(array.Value(i))
 		}
 	} else {
 		log.Println("data type error")
@@ -338,7 +321,8 @@ func (c *Client) DOWNLOAD(url string, res interface{}, paramFuncs ...paramFunc) 
 			req = f(req)
 		}
 	}
-	return req.Expect().Status(c.checkStatus()).ContentType("application/octet-stream").Body().NotEmpty().Raw()
+
+	return req.Expect().Status(c.checkStatus()).Body().NotEmpty().Raw()
 }
 
 // DELETE
@@ -355,7 +339,7 @@ func (c *Client) DELETE(url string, res interface{}, paramFuncs ...paramFunc) {
 	} else if testRes, ok := res.([]Responses); ok {
 		array := req.Expect().Status(c.checkStatus()).JSON().Array()
 		for i, v := range testRes {
-			v.Test(array.Element(i))
+			v.Test(array.Value(i))
 		}
 	} else {
 		log.Println("data type error")

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gavv/httpexpect/v2"
 	"github.com/gin-gonic/gin"
+	"github.com/snowlyg/helper/arr"
 )
 
 func TestIdKeys(t *testing.T) {
@@ -29,7 +30,7 @@ func TestHttpTest(t *testing.T) {
 	e := httpexpect.WithConfig(httpexpect.Config{
 		Client: &http.Client{
 			Transport: httpexpect.NewBinder(handler),
-			Jar:       httpexpect.NewJar(),
+			Jar:       httpexpect.NewCookieJar(),
 		},
 		Reporter: httpexpect.NewAssertReporter(t),
 		Printers: []httpexpect.Printer{
@@ -50,7 +51,7 @@ func TestHttpTestArray(t *testing.T) {
 	e := httpexpect.WithConfig(httpexpect.Config{
 		Client: &http.Client{
 			Transport: httpexpect.NewBinder(handler),
-			Jar:       httpexpect.NewJar(),
+			Jar:       httpexpect.NewCookieJar(),
 		},
 		Reporter: httpexpect.NewAssertReporter(t),
 		Printers: []httpexpect.Printer{
@@ -70,7 +71,7 @@ func TestHttpScan(t *testing.T) {
 	e := httpexpect.WithConfig(httpexpect.Config{
 		Client: &http.Client{
 			Transport: httpexpect.NewBinder(handler),
-			Jar:       httpexpect.NewJar(),
+			Jar:       httpexpect.NewCookieJar(),
 		},
 		Reporter: httpexpect.NewAssertReporter(t),
 		Printers: []httpexpect.Printer{
@@ -84,5 +85,73 @@ func TestHttpScan(t *testing.T) {
 	x := pageKeys.GetString("data.message")
 	if x != "pong" {
 		t.Errorf("Scan want get pong but get %s", x)
+	}
+}
+
+func TestSchema(t *testing.T) {
+	wantJson := `{
+		"status": 200,
+		"data": {
+			"list": [
+				{
+					"createdAt": "2025-03-21T16:27:20+08:00",
+					"deletedAt": "",
+					"updatedAt": "2025-03-21T16:27:20+08:00",
+					"dev_remark": "",
+					"pac_room_id": 1,
+					"room_desc": "1413-301"
+				}
+			],
+			"total": 1,
+			"page": 1,
+			"pageSize": 20
+		},
+		"message": "OK"
+	}`
+	res, err := Schema([]byte(wantJson))
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if res.GetInt("status") != 200 {
+		t.Errorf("status want %d but get %d", 200, res.GetInt("status"))
+	}
+	if res.GetString("message") != "OK" {
+		t.Errorf("message want %s but get %s", "OK", res.GetString("message"))
+	}
+	data := res.GetResponse("data")
+	if data != nil {
+		if data.GetInt("total") != 1 {
+			t.Errorf("total want %d but get %d", 1, data.GetInt("total"))
+		}
+		if data.GetInt("page") != 1 {
+			t.Errorf("page want %d but get %d", 1, data.GetInt("page"))
+		}
+		if data.GetInt("pageSize") != 20 {
+			t.Errorf("pageSize want %d but get %d", 20, data.GetInt("pageSize"))
+		}
+		list := data.GetResponses("list")
+		if len(list) != 1 {
+			t.Errorf("list len want %d but get %d", 1, len(list))
+		}
+		first := list[0]
+		if first.GetId("pac_room_id") != 1 {
+			t.Errorf("pac_room_id want %d but get %d", 1, first.GetId("pac_room_id"))
+		}
+		if first.GetString("room_desc") != "1413-301" {
+			t.Errorf("room_desc want %s but get %s", "1413-301", first.GetString("room_desc"))
+		}
+		if first.GetString("dev_remark") != "" {
+			t.Errorf("dev_remark want %s but get %s", "", first.GetString("dev_remark"))
+		}
+		keys := arr.NewCheckArrayType(0)
+		for _, v := range first.Keys() {
+			keys.Add(v)
+		}
+
+		for _, k := range []string{"createdAt", "deletedAt", "updatedAt", "dev_remark", "pac_room_id", "room_desc"} {
+			if !keys.Check(k) {
+				t.Errorf("%s not in keys", k)
+			}
+		}
 	}
 }

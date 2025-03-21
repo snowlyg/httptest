@@ -1,6 +1,7 @@
 package httptest
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -14,7 +15,7 @@ type Responses []Response
 
 // Response
 type Response struct {
-	Type   string                // httpest type , if empty use  Equal() function to test
+	Type   string                // httpest type , if empty use  IsEqual() function to test
 	Key    string                // httptest data's key
 	Value  interface{}           // httptest data's value
 	Length int                   // httptest data's length,when the data are array or map
@@ -46,20 +47,20 @@ func Test(value *httpexpect.Value, reses ...interface{}) {
 		reflectTypeString := reflect.TypeOf(ks).String()
 		switch reflectTypeString {
 		case "bool":
-			value.Boolean().Equal(ks.(bool))
+			value.Boolean().IsEqual(ks.(bool))
 		case "string":
-			value.String().Equal(ks.(string))
+			value.String().IsEqual(ks.(string))
 		case "float64":
-			value.Number().Equal(ks.(float64))
+			value.Number().IsEqual(ks.(float64))
 		case "uint":
-			value.Number().Equal(ks.(uint))
+			value.Number().IsEqual(ks.(uint))
 		case "int":
-			value.Equal(ks.(int))
+			value.IsEqual(ks.(int))
 
 		case "[]httptest.Responses":
 			valueLen := len(ks.([]Responses))
 			length := int(value.Array().Length().Raw())
-			value.Array().Length().Equal(valueLen)
+			value.Array().Length().IsEqual(valueLen)
 			if length > 0 {
 				max := 1
 				if valueLen == length {
@@ -74,7 +75,7 @@ func Test(value *httpexpect.Value, reses ...interface{}) {
 			values := ks.(map[int][]Responses)
 			length := len(values)
 			if length > 0 {
-				value.Object().Keys().Length().Equal(length)
+				value.Object().Keys().Length().IsEqual(length)
 				for key, v := range values {
 					for _, vres := range v {
 						vres.Test(value.Object().Value(strconv.FormatInt(int64(key), 10)))
@@ -85,7 +86,7 @@ func Test(value *httpexpect.Value, reses ...interface{}) {
 			ks.(Responses).Test(value)
 		case "[]uint":
 			valueLen := len(ks.([]uint))
-			value.Array().Length().Equal(valueLen)
+			value.Array().Length().IsEqual(valueLen)
 			length := int(value.Array().Length().Raw())
 			if length > 0 {
 				max := 1
@@ -93,13 +94,13 @@ func Test(value *httpexpect.Value, reses ...interface{}) {
 					max = length
 				}
 				for i := 0; i < max; i++ {
-					value.Array().Element(i).Number().Equal(ks.([]uint)[i])
+					value.Array().Element(i).Number().IsEqual(ks.([]uint)[i])
 				}
 			}
 
 		case "[]string":
 			valueLen := len(ks.([]string))
-			value.Array().Length().Equal(valueLen)
+			value.Array().Length().IsEqual(valueLen)
 			length := int(value.Array().Length().Raw())
 			if length > 0 {
 				max := 1
@@ -107,14 +108,14 @@ func Test(value *httpexpect.Value, reses ...interface{}) {
 					max = length
 				}
 				for i := 0; i < max; i++ {
-					value.Array().Element(i).String().Equal(ks.([]string)[i])
+					value.Array().Element(i).String().IsEqual(ks.([]string)[i])
 				}
 			}
 		case "map[int]string":
 			values := ks.(map[int]string)
-			value.Object().Keys().Length().Equal(len(values))
+			value.Object().Keys().Length().IsEqual(len(values))
 			for key, v := range values {
-				value.Object().Value(strconv.FormatInt(int64(key), 10)).Equal(v)
+				value.Object().Value(strconv.FormatInt(int64(key), 10)).IsEqual(v)
 			}
 		default:
 			continue
@@ -137,8 +138,8 @@ func Scan(object *httpexpect.Object, reses ...Responses) {
 	array := object.Value("data").Array()
 	length := int(array.Length().Raw())
 	if length < len(reses) {
-		fmt.Println("Return data not equal keys length")
-		array.Length().Equal(len(reses))
+		fmt.Println("Return data not IsEqual keys length")
+		array.Length().IsEqual(len(reses))
 		return
 	}
 
@@ -164,36 +165,36 @@ func (res Responses) Test(value *httpexpect.Value) {
 			reflectTypeString := reflect.TypeOf(rs.Value).String()
 			switch reflectTypeString {
 			case "bool":
-				value.Object().Value(rs.Key).Boolean().Equal(rs.Value.(bool))
+				value.Object().Value(rs.Key).Boolean().IsEqual(rs.Value.(bool))
 			case "string":
 				if strings.ToLower(rs.Type) == "notempty" {
 					value.Object().Value(rs.Key).String().NotEmpty()
 				} else {
-					value.Object().Value(rs.Key).String().Equal(rs.Value.(string))
+					value.Object().Value(rs.Key).String().IsEqual(rs.Value.(string))
 				}
 			case "float64":
 				if strings.ToLower(rs.Type) == "ge" {
 					value.Object().Value(rs.Key).Number().Ge(rs.Value.(float64))
 				} else {
-					value.Object().Value(rs.Key).Number().Equal(rs.Value.(float64))
+					value.Object().Value(rs.Key).Number().IsEqual(rs.Value.(float64))
 				}
 			case "uint":
 				if strings.ToLower(rs.Type) == "ge" {
 					value.Object().Value(rs.Key).Number().Ge(rs.Value.(uint))
 				} else {
-					value.Object().Value(rs.Key).Number().Equal(rs.Value.(uint))
+					value.Object().Value(rs.Key).Number().IsEqual(rs.Value.(uint))
 				}
 			case "int":
 				if strings.ToLower(rs.Type) == "ge" {
 					value.Object().Value(rs.Key).Number().Ge(rs.Value.(int))
 				} else {
-					value.Object().Value(rs.Key).Number().Equal(rs.Value.(int))
+					value.Object().Value(rs.Key).Number().IsEqual(rs.Value.(int))
 				}
 			case "[]httptest.Responses":
 				valueLen := len(rs.Value.([]Responses))
 				length := int(value.Object().Value(rs.Key).Array().Length().Raw())
 				if rs.Length == 0 {
-					value.Object().Value(rs.Key).Array().Length().Equal(valueLen)
+					value.Object().Value(rs.Key).Array().Length().IsEqual(valueLen)
 				}
 				if length > 0 {
 					max := 1
@@ -214,7 +215,7 @@ func (res Responses) Test(value *httpexpect.Value) {
 				values := rs.Value.(map[int][]Responses)
 				length := len(values)
 				if length > 0 {
-					value.Object().Value(rs.Key).Object().Keys().Length().Equal(length)
+					value.Object().Value(rs.Key).Object().Keys().Length().IsEqual(length)
 					for key, v := range values {
 						for _, vres := range v {
 							vres.Test(value.Object().Value(rs.Key).Object().Value(strconv.FormatInt(int64(key), 10)))
@@ -227,7 +228,7 @@ func (res Responses) Test(value *httpexpect.Value) {
 
 				valueLen := len(rs.Value.([]uint))
 				if rs.Length == 0 {
-					value.Object().Value(rs.Key).Array().Length().Equal(valueLen)
+					value.Object().Value(rs.Key).Array().Length().IsEqual(valueLen)
 				}
 				length := int(value.Object().Value(rs.Key).Array().Length().Raw())
 				if length > 0 {
@@ -239,7 +240,7 @@ func (res Responses) Test(value *httpexpect.Value) {
 						max = length
 					}
 					for i := 0; i < max; i++ {
-						value.Object().Value(rs.Key).Array().Contains(rs.Value.([]uint)[i])
+						value.Object().Value(rs.Key).Array().ContainsAny(rs.Value.([]uint)[i])
 					}
 				}
 
@@ -252,7 +253,7 @@ func (res Responses) Test(value *httpexpect.Value) {
 				} else {
 					valueLen := len(rs.Value.([]string))
 					if rs.Length == 0 {
-						value.Object().Value(rs.Key).Array().Length().Equal(valueLen)
+						value.Object().Value(rs.Key).Array().Length().IsEqual(valueLen)
 					}
 					length := int(value.Object().Value(rs.Key).Array().Length().Raw())
 					if length > 0 {
@@ -264,7 +265,7 @@ func (res Responses) Test(value *httpexpect.Value) {
 							max = length
 						}
 						for i := 0; i < max; i++ {
-							value.Object().Value(rs.Key).Array().Contains(rs.Value.([]string)[i])
+							value.Object().Value(rs.Key).Array().ContainsAny(rs.Value.([]string)[i])
 						}
 					}
 				}
@@ -275,9 +276,9 @@ func (res Responses) Test(value *httpexpect.Value) {
 					value.Object().Value(rs.Key).NotNull()
 				} else {
 					values := rs.Value.(map[int]string)
-					value.Object().Value(rs.Key).Object().Keys().Length().Equal(len(values))
+					value.Object().Value(rs.Key).Object().Keys().Length().IsEqual(len(values))
 					for key, v := range values {
-						value.Object().Value(rs.Key).Object().Value(strconv.FormatInt(int64(key), 10)).Equal(v)
+						value.Object().Value(rs.Key).Object().Value(strconv.FormatInt(int64(key), 10)).IsEqual(v)
 					}
 				}
 			default:
@@ -317,7 +318,7 @@ func (res Responses) Scan(object *httpexpect.Object) {
 				valueLen = rk.Length
 			}
 			if rk.Length == 0 {
-				object.Value(rk.Key).Array().Length().Equal(valueLen)
+				object.Value(rk.Key).Array().Length().IsEqual(valueLen)
 			}
 			length := int(object.Value(rk.Key).Array().Length().Raw())
 			if length > 0 {
@@ -627,4 +628,88 @@ func (res Responses) GetId(key ...string) uint {
 		key = append(key, "data", "id")
 	}
 	return res.GetUint(key...)
+}
+
+// Schema
+func Schema(str []byte) (Responses, error) {
+	objs := Responses{}
+	j := map[string]any{}
+	if err := json.Unmarshal(str, &j); err != nil {
+		return objs, fmt.Errorf("json unmarshal error %w", err)
+	}
+	if o, err := schema(j); err != nil {
+		return objs, err
+	} else {
+		objs = o
+	}
+	return objs, nil
+}
+
+// schema
+func schema(j map[string]any) (Responses, error) {
+	objs := Responses{}
+	if j == nil {
+		return objs, nil
+	}
+	for k, v := range j {
+		if k == "" {
+			continue
+		}
+		obj := schemaResponse(k, v)
+		objs = append(objs, obj)
+	}
+	return objs, nil
+}
+
+// schemaResponse
+func schemaSliceResponse(v any) Responses {
+	obj := Responses{}
+	for k2, v2 := range v.(map[string]interface{}) {
+		obj = append(obj, schemaResponse(k2, v2))
+	}
+	return obj
+}
+
+// schemaResponse
+func schemaResponse(k string, v any) Response {
+	obj := Response{}
+	obj.Key = k
+
+	if v == nil {
+		return obj
+	}
+	typeName := reflect.TypeOf(v).String()
+	switch typeName {
+	case "bool":
+		obj.Value = v.(bool)
+	case "string":
+		if obj.Key == "createdAt" || obj.Key == "updatedAt" || obj.Key == "deletedAt" {
+			obj.Type = "notempty"
+		} else {
+			obj.Value = v.(string)
+		}
+	case "uint":
+		obj.Value = v.(uint)
+	case "int":
+		obj.Value = v.(int)
+	case "int32":
+		obj.Value = v.(int32)
+	case "float64":
+		obj.Value = v.(float64)
+	case "map[string]interface {}":
+		if value, _ := schema(v.(map[string]interface{})); value != nil {
+			obj.Value = value
+		}
+	case "[]interface {}":
+		list := []Responses{}
+		for _, v1 := range v.([]interface{}) {
+			list = append(list, schemaSliceResponse(v1))
+		}
+		obj.Value = list
+	case "[]string":
+		obj.Value = v.([]string)
+	default:
+		fmt.Printf("schemaResponse key:%s valueTypeName:%s\n", k, typeName)
+	}
+	return obj
 }

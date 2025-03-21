@@ -8,10 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func init() {
-	gin.SetMode(gin.TestMode)
-}
-
 type Request struct {
 	Message string `json:"message" form:"message" uri:"message"`
 }
@@ -168,10 +164,10 @@ func GinHandler(r *gin.Engine) *gin.Engine {
 	return r
 }
 
-func TestInstance(t *testing.T) {
+func TestNewClient(t *testing.T) {
 	engine := gin.New()
 	// Create httpexpect instance
-	client := Instance(t, GinHandler(engine))
+	client := NewClient(t, GinHandler(engine))
 	client.GET("/example", NewResponses(http.StatusOK, "OK", Responses{{Key: "message", Value: "pong"}}))
 	client.DELETE("/example/1", NewResponses(http.StatusOK, "OK", Responses{{Key: "id", Value: 1}}))
 }
@@ -179,7 +175,7 @@ func TestInstance(t *testing.T) {
 func TestNewWithQueryObjectParamFunc(t *testing.T) {
 	engine := gin.New()
 	// Create httpexpect instance
-	client := Instance(t, GinHandler(engine))
+	client := NewClient(t, GinHandler(engine))
 	pageKeys := Responses{{Key: "message", Value: "message"}}
 	client.GET("/example", NewResponses(http.StatusOK, "OK", pageKeys), NewWithQueryObjectParamFunc(map[string]interface{}{"message": "message"}))
 }
@@ -187,7 +183,7 @@ func TestNewWithQueryObjectParamFunc(t *testing.T) {
 func TestNewNewWithJsonParamFunc(t *testing.T) {
 	engine := gin.New()
 	// Create httpexpect instance
-	client := Instance(t, GinHandler(engine))
+	client := NewClient(t, GinHandler(engine))
 	client.POST("/example", NewResponses(http.StatusOK, "OK", Responses{{Key: "message", Value: "message"}}), NewWithJsonParamFunc(map[string]interface{}{"message": "message"}))
 	client.POST("/example", NewResponses(http.StatusOK, "OK", Responses{{Key: "message", Value: "pong"}}), NewWithJsonParamFunc(map[string]interface{}{"message": ""}))
 }
@@ -195,7 +191,7 @@ func TestNewNewWithJsonParamFunc(t *testing.T) {
 func TestNewResponses(t *testing.T) {
 	engine := gin.New()
 	// Create httpexpect instance
-	client := Instance(t, GinHandler(engine))
+	client := NewClient(t, GinHandler(engine))
 
 	client.GET("/example", NewResponses(http.StatusOK, "OK", Responses{{Key: "message", Value: "pong"}}))
 	client.GET("/mutil", NewResponses(http.StatusOK, "OK", Responses{{Key: "message", Value: "pong"}}, Responses{{Key: "message", Value: "pong"}}))
@@ -205,7 +201,7 @@ func TestNewResponses(t *testing.T) {
 func TestNewResponsesWithLength(t *testing.T) {
 	engine := gin.New()
 	// Create httpexpect instance
-	client := Instance(t, GinHandler(engine))
+	client := NewClient(t, GinHandler(engine))
 	res := []Responses{{{Key: "message", Value: "pong"}}, {{Key: "message", Value: "pong"}}}
 	client.GET("/mutil", NewResponsesWithLength(http.StatusOK, "OK", res, 2))
 }
@@ -213,17 +209,19 @@ func TestNewResponsesWithLength(t *testing.T) {
 func TestNewWithFileParamFunc(t *testing.T) {
 	engine := gin.New()
 	// Create httpexpect instance
-	client := Instance(t, GinHandler(engine))
+	client := NewClient(t, GinHandler(engine))
 	name := "test_img.jpg"
 	fh, _ := os.Open("./" + name)
 	defer fh.Close()
-	client.UPLOAD("/upload", SuccessResponse, NewWithFileParamFunc([]File{{Key: "file", Path: name, Reader: fh}}))
+
+	uf := []File{{Key: "file", Path: name, Reader: fh}}
+	client.UPLOAD("/upload", SuccessResponse, NewWithFileParamFunc(uf, nil))
 }
 
 func TestLogin(t *testing.T) {
 	engine := gin.New()
 	// Create httpexpect instance
-	client := Instance(t, GinHandler(engine))
+	client := NewClient(t, GinHandler(engine))
 	x := Responses{{Key: "AccessToken", Value: "EIIDFJDIKFJJIdfdkfk.uisdifsdfisdouf"}, {Key: "user", Value: Responses{{Key: "id", Value: 1}}}}
 	err := client.Login("/login", "data.AccessToken", NewResponses(http.StatusOK, "OK", x))
 	if err != nil {
@@ -237,6 +235,6 @@ func TestLogin(t *testing.T) {
 
 func TestLogout(t *testing.T) {
 	engine := gin.New()
-	client := Instance(t, GinHandler(engine))
+	client := NewClient(t, GinHandler(engine))
 	client.Logout("/logout", SuccessResponse)
 }
